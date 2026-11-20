@@ -127,33 +127,35 @@ M = dict(
     lampuHijau=mat('LampuHijau', '#40ff80', 0.3, emit='#20ff60', emit_str=4), emas=mat('Emas', '#e8b83c', 0.25, 0.9),
 )
 LANTAI = {'A': mat('LantaiA', '#c9a27a', 0.7), 'B': mat('LantaiB', '#cfd9c6', 0.85), 'C': mat('LantaiC', '#ecd3dc', 0.85),
-          'D': mat('LantaiD', '#c8d3e6', 0.85), 'E': mat('LantaiE', '#d4e8d6', 0.85), 'F': mat('LantaiF', '#ead9bd', 0.85)}
+          'D': mat('LantaiD', '#c8d3e6', 0.85), 'E': mat('LantaiE', '#e9d6c6', 0.85), 'F': mat('LantaiF', '#dcd3ea', 0.85),
+          'G': mat('LantaiG', '#d4e8d6', 0.85), 'H': mat('LantaiH', '#ead9bd', 0.85)}
 PERMAIDANI = {'A': mat('PermA', '#8e3b46', 0.95), 'B': mat('PermB', '#3e7a6b', 0.95), 'C': mat('PermC', '#6a4c93', 0.95),
-              'D': mat('PermD', '#2e4a7d', 0.95), 'E': mat('PermE', '#3f7d4c', 0.95), 'F': mat('PermF', '#8a6a2f', 0.95)}
+              'D': mat('PermD', '#2e4a7d', 0.95), 'E': mat('PermE', '#b5542f', 0.95), 'F': mat('PermF', '#5a3f8f', 0.95),
+              'G': mat('PermG', '#3f7d4c', 0.95), 'H': mat('PermH', '#8a6a2f', 0.95)}
 
 # Tanah & landskap
-box(0, -0.06, 0, 80, 0.1, 64, M['rumput'])
+box(0, -0.06, 0, 90, 0.1, 66, M['rumput'])
 for i in range(40):
     x, z = random.uniform(-38, 38), random.uniform(-30, 30)
-    if abs(x) < 21 and abs(z) < 16: continue
+    if abs(x) < 24 and abs(z) < 16: continue
     box(x, 0.0, z, random.uniform(1, 3), 0.02, random.uniform(1, 3), M['rumput2'])
 # laluan masuk
 box(0, 0.0, 20.5, 4, 0.04, 9, M['batu'])
 for i in range(6): box(0, 0.03, 16.8 + i * 1.4, 3.6, 0.02, 0.08, M['tepi'])
 # kolam
-cyl(-28, 0.0, 17, 4.5, 0.06, M['air'], verts=32)
-cyl(-28, -0.02, 17, 4.9, 0.08, M['batu'], verts=32)
+cyl(-31, 0.0, 18, 4.5, 0.06, M['air'], verts=32)
+cyl(-31, -0.02, 18, 4.9, 0.08, M['batu'], verts=32)
 
 # Bangunan: tapak
-W, D = 38, 28
+W, D = 44, 28
 box(0, 0.12, 0, W + 0.8, 0.3, D + 0.8, M['tepi'], bevel=0.05)
 box(0, 0.28, 0, W, 0.04, D, M['tapak'])
 FLOOR = 0.3
 
 # Bilik
-BILIK = {'A': (-12.5, -7.5, 'PEJABAT CEO'), 'B': (0, -7.5, 'PRODUK & R&D'), 'C': (12.5, -7.5, 'STUDIO KREATIF'),
-         'D': (-12.5, 7.5, 'MAKMAL TEKNOLOGI'), 'E': (0, 7.5, 'JUALAN & SOKONGAN'), 'F': (12.5, 7.5, 'KEWANGAN & PEMATUHAN')}
-RW, RD = 12, 11
+BILIK = {'A': (-16.5, -7.5, 'PEJABAT CEO'), 'B': (-5.5, -7.5, 'MAKMAL IDEA'), 'C': (5.5, -7.5, 'KREATIF & PEMASARAN'), 'D': (16.5, -7.5, 'PASUKAN WEB APP'),
+         'E': (-16.5, 7.5, 'STUDIO GAME'), 'F': (-5.5, 7.5, 'PASUKAN MOBILE APP'), 'G': (5.5, 7.5, 'JUALAN & SOKONGAN'), 'H': (16.5, 7.5, 'KEWANGAN & PEMATUHAN')}
+RW, RD = 11, 11
 
 def dinding_kaca(x1, z1, x2, z2, h=1.5):
     L = math.hypot(x2 - x1, z2 - z1); cx, cz = (x1 + x2) / 2, (z1 + z2) / 2
@@ -197,7 +199,7 @@ for k, (cx, cz, nama) in BILIK.items():
     # partition kaca sisi koridor dengan pintu 2.4 di tengah
     dinding_kaca(x0, zc, cx - 1.2, zc); dinding_kaca(cx + 1.2, zc, x1, zc)
     # partition antara bilik (kaca)
-    if k in 'ABDE': dinding_kaca(x1, cz - RD / 2, x1, cz + RD / 2)
+    if k in 'ABCEFG': dinding_kaca(x1, cz - RD / 2, x1, cz + RD / 2)
 
 # Koridor & lobi tengah
 box(0, FLOOR + 0.012, 0, W - 0.5, 0.02, 3.8, mat('Koridor', '#e7e1d3', 0.7))
@@ -262,51 +264,73 @@ def sofa(x, z, lebar, m, rot=0):
     o = box(x, FLOOR + 0.6, z - 0.38 if rot == 0 else z, lebar, 0.6, 0.22, m, bevel=0.08, rot=rot)
     for dx in (-lebar / 2 + 0.1, lebar / 2 - 0.1): box(x + dx, FLOOR + 0.45, z, 0.2, 0.5, 0.9, m, bevel=0.06)
 
-# Meja setiap bilik (ikut susunan dalam app.js)
-SUSUNAN = {'A': ['CEO', 'KETUASTAF'], 'B': ['PELANCAR', 'PENYELIDIK'], 'C': ['DESIGNER', 'PEMASARAN'],
-           'D': ['DEVELOPER', 'QA'], 'E': ['JUALAN', 'SOKONGAN'], 'F': ['KEWANGAN', 'PEMATUHAN']}
+# Meja setiap bilik (ID ahli mesti sama dengan app.js)
+SUSUNAN = {'A': ['CEO', 'KETUASTAF', 'HANA'], 'B': ['IDRIS', 'SITI', 'KUMAR'], 'C': ['MEILING', 'HAFIZ', 'AINA'], 'D': ['FARID', 'NADIA', 'RAJ', 'ZUL'],
+           'E': ['AMIR', 'LINA', 'DANIEL', 'YANA'], 'F': ['HAKIM', 'SARA', 'BEN', 'IKA'], 'G': ['RIZAL', 'TINI'], 'H': ['LIYANA', 'AZMAN']}
+SLOT4 = [(-2.4, -1.7), (2.4, -1.7), (-2.4, 2.1), (2.4, 2.1)]
+SLOT2 = [(-2.4, 0.2), (2.4, 0.2)]
 for k, (cx, cz, nama) in BILIK.items():
-    for i, kod in enumerate(SUSUNAN[k]):
-        meja(kod, cx + (-2.6 if i == 0 else 2.6), cz + 0.2, ceo=(kod == 'CEO'))
+    ahli = SUSUNAN[k]; slots = SLOT2 if len(ahli) <= 2 else SLOT4
+    for i, kod in enumerate(ahli):
+        dx, dz = slots[i]
+        meja(kod, cx + dx, cz + dz, ceo=(kod == 'CEO'))
     back = cz - RD / 2 + 0.6 if cz < 0 else cz + RD / 2 - 0.6
     zin = cz + (RD / 2 - 1.0) * (1 if cz < 0 else -1)
-    pokok_pasu(cx + RW / 2 - 0.8, back, 1.1)
-    pokok_pasu(cx - RW / 2 + 0.8, zin - (0.3 if cz < 0 else -0.3), 0.8)
-    # papan nama bilik di dinding belakang / tepi
+    pokok_pasu(cx + RW / 2 - 0.7, back, 1.0)
+    pokok_pasu(cx - RW / 2 + 0.7, zin - (0.3 if cz < 0 else -0.3), 0.8)
     if cz < 0:
-        box(cx, FLOOR + 2.15, back - 0.18, 3.6, 0.5, 0.06, M['aksen'], bevel=0.02)
+        box(cx, FLOOR + 2.15, back - 0.18, 4.4, 0.5, 0.06, M['aksen'], bevel=0.02)
         text(nama, cx, FLOOR + 2.15, back - 0.12, 0.26, M['putih'])
     empty('Label_' + k, cx, FLOOR + 2.9, back)
 
+# CEO: rak buku, sofa, trofi
 cx, cz = BILIK['A'][:2]
-rak_buku(cx - 4.6, cz - RD / 2 + 0.55); rak_buku(cx - 2.8, cz - RD / 2 + 0.55)
-sofa(cx + 3.6, cz - 3.4, 2.4, M['sofaMerah'])
-box(cx + 3.6, FLOOR + 0.25, cz - 2.3, 1.2, 0.08, 0.6, M['kayuGelap'], bevel=0.02)
-cyl(cx + 3.6, FLOOR + 0.12, cz - 2.3, 0.05, 0.22, M['besi'])
-cyl(cx - 0.2, FLOOR + 0.6, cz - 4.6, 0.25, 0.2, M['emas'], verts=16)  # trofi
-box(cx - 0.2, FLOOR + 0.25, cz - 4.6, 0.6, 0.5, 0.4, M['kayuGelap'])
+rak_buku(cx - 4.0, cz - RD / 2 + 0.55); rak_buku(cx - 2.3, cz - RD / 2 + 0.55)
+sofa(cx + 3.0, cz + 4.0, 2.2, M['sofaMerah'])
+cyl(cx + 0.6, FLOOR + 0.6, cz - 4.6, 0.25, 0.2, M['emas'], verts=16); box(cx + 0.6, FLOOR + 0.25, cz - 4.6, 0.6, 0.5, 0.4, M['kayuGelap'])
+# Makmal Idea: papan putih penuh nota, beanbag, mentol idea
 cx, cz = BILIK['B'][:2]
-box(cx, FLOOR + 1.6, cz - RD / 2 + 0.2, 3.2, 1.5, 0.06, M['putih'], bevel=0.02)  # papan putih
-for i in range(6): box(cx - 1.2 + i * 0.45, FLOOR + 1.7 + random.uniform(-0.3, 0.3), cz - RD / 2 + 0.24, 0.3, 0.3, 0.01, random.choice([M['sofaKuning'], M['sofaHijau'], M['sofaMerah'], M['sofaBiru']]))
-sph(cx - 3.5, FLOOR + 0.35, cz + 3.2, 0.55, M['sofaHijau'], sy=0.7); sph(cx - 2.3, FLOOR + 0.35, cz + 3.4, 0.55, M['sofaKuning'], sy=0.7)
+box(cx, FLOOR + 1.6, cz - RD / 2 + 0.2, 3.6, 1.5, 0.06, M['putih'], bevel=0.02)
+for i in range(8): box(cx - 1.5 + i * 0.42, FLOOR + 1.7 + random.uniform(-0.4, 0.4), cz - RD / 2 + 0.24, 0.3, 0.3, 0.01, random.choice([M['sofaKuning'], M['sofaHijau'], M['sofaMerah'], M['sofaBiru']]))
+sph(cx + 2.4, FLOOR + 0.35, cz + 3.0, 0.55, M['sofaHijau'], sy=0.7); sph(cx + 3.6, FLOOR + 0.35, cz + 3.6, 0.55, M['sofaKuning'], sy=0.7)
+sph(cx + 3.0, FLOOR + 1.9, cz + 3.3, 0.28, M['lampu']); cyl(cx + 3.0, FLOOR + 1.0, cz + 3.3, 0.03, 1.5, M['besi'], verts=6)
+# Kreatif: dinding warna, kanvas
 cx, cz = BILIK['C'][:2]
 for i, m in enumerate([M['sofaMerah'], M['sofaKuning'], M['sofaHijau'], M['sofaBiru'], mat('Ungu', '#8e5cf0', 0.8)]):
     box(cx - 3 + i * 1.5, FLOOR + 1.6, cz - RD / 2 + 0.2, 1.2, 1.6, 0.04, m)
-box(cx + 4.2, FLOOR + 1.0, cz - 2.5, 0.05, 1.6, 0.05, M['kayu']); box(cx + 4.2, FLOOR + 1.3, cz - 2.45, 1.0, 1.2, 0.05, M['putih'])
-box(cx + 4.0, FLOOR + 1.4, cz - 2.42, 0.4, 0.4, 0.01, M['sofaMerah']); box(cx + 4.4, FLOOR + 1.2, cz - 2.42, 0.3, 0.5, 0.01, M['sofaBiru'])
+box(cx + 3.4, FLOOR + 1.0, cz + 3.6, 0.05, 1.6, 0.05, M['kayu']); box(cx + 3.4, FLOOR + 1.3, cz + 3.65, 1.0, 1.2, 0.05, M['putih'])
+box(cx + 3.2, FLOOR + 1.4, cz + 3.68, 0.4, 0.4, 0.01, M['sofaMerah']); box(cx + 3.6, FLOOR + 1.2, cz + 3.68, 0.3, 0.5, 0.01, M['sofaBiru'])
+# Web App: rak server berlampu
 cx, cz = BILIK['D'][:2]
-for i in range(3):
-    box(cx - 5.0 + i * 0.75, FLOOR + 1.05, cz + 4.6, 0.65, 2.1, 0.7, M['hitam'], bevel=0.02)
+for i in range(2):
+    box(cx + RW / 2 - 0.6, FLOOR + 1.05, cz - 3.6 + i * 0.8, 0.7, 2.1, 0.65, M['hitam'], bevel=0.02)
     for j in range(7):
-        box(cx - 5.0 + i * 0.75 + 0.2, FLOOR + 0.35 + j * 0.25, cz + 4.24, 0.06, 0.04, 0.02, M['lampuHijau'] if (i + j) % 3 else M['lampuMerah'])
+        box(cx + RW / 2 - 0.96, FLOOR + 0.35 + j * 0.25, cz - 3.6 + i * 0.8, 0.02, 0.04, 0.06, M['lampuHijau'] if (i + j) % 3 else M['lampuMerah'])
+# Studio Game: mesin arked, TV besar, konsol
 cx, cz = BILIK['E'][:2]
+arked = mat('Arked', '#ff4fa3', 0.5)
+for i in range(2):
+    box(cx - RW / 2 + 0.6, FLOOR + 0.95, cz - 3.4 + i * 1.0, 0.8, 1.9, 0.8, arked, bevel=0.04)
+    box(cx - RW / 2 + 1.01, FLOOR + 1.35, cz - 3.4 + i * 1.0, 0.02, 0.5, 0.6, mat('SkrinArked', '#30e0ff', 0.2, emit='#30e0ff', emit_str=2.5))
+box(cx, FLOOR + 1.9, cz - RD / 2 + 0.3, 3.0, 1.6, 0.08, M['hitam'], bevel=0.02)
+box(cx, FLOOR + 1.9, cz - RD / 2 + 0.35, 2.8, 1.4, 0.01, mat('SkrinTV', '#7a5cff', 0.2, emit='#7a5cff', emit_str=1.5))
+sph(cx + 3.6, FLOOR + 0.35, cz - 3.6, 0.5, M['sofaMerah'], sy=0.7); sph(cx + 2.6, FLOOR + 0.35, cz - 3.9, 0.5, M['sofaBiru'], sy=0.7)
+# Mobile App: dinding paparan telefon
+cx, cz = BILIK['F'][:2]
+box(cx, FLOOR + 1.6, cz - RD / 2 + 0.25, 4.0, 1.4, 0.06, M['putih'], bevel=0.02)
+for i in range(7):
+    box(cx - 1.65 + i * 0.55, FLOOR + 1.6, cz - RD / 2 + 0.3, 0.32, 0.62, 0.04, M['hitam'], bevel=0.02)
+    box(cx - 1.65 + i * 0.55, FLOOR + 1.6, cz - RD / 2 + 0.33, 0.27, 0.54, 0.01, random.choice([M['sofaKuning'], M['sofaHijau'], M['sofaBiru'], M['sofaMerah']]))
+# Jualan & Sokongan: meja mesyuarat bulat
+cx, cz = BILIK['G'][:2]
 cyl(cx, FLOOR + 0.75, cz + 3.4, 1.0, 0.06, M['kayuCerah'], verts=24); cyl(cx, FLOOR + 0.38, cz + 3.4, 0.08, 0.72, M['besi'])
 for i in range(4):
     a = i * math.pi / 2 + 0.4; kerusi_pejabat(cx + math.cos(a) * 1.4, cz + 3.4 + math.sin(a) * 1.4, m=M['sofaHijau'])
-cx, cz = BILIK['F'][:2]
-for i in range(3): box(cx + 2.5 + i * 0.75, FLOOR + 0.7, cz + 4.6, 0.7, 1.4, 0.6, M['besi'], bevel=0.02)
-box(cx - 4.5, FLOOR + 0.5, cz + 4.4, 1.0, 1.0, 0.9, mat('Peti', '#4a4f57', 0.4, 0.6), bevel=0.04)
-cyl(cx - 4.5, FLOOR + 0.55, cz + 3.93, 0.15, 0.05, M['emas'])
+# Kewangan & Pematuhan: kabinet fail, peti besi
+cx, cz = BILIK['H'][:2]
+for i in range(3): box(cx + 1.8 + i * 0.75, FLOOR + 0.7, cz + 4.5, 0.7, 1.4, 0.6, M['besi'], bevel=0.02)
+box(cx - 4.0, FLOOR + 0.5, cz + 4.4, 1.0, 1.0, 0.9, mat('Peti', '#4a4f57', 0.4, 0.6), bevel=0.04)
+cyl(cx - 4.0, FLOOR + 0.55, cz + 3.93, 0.15, 0.05, M['emas'])
 
 # Lobi tengah: kaunter kopi, meja bulat, sofa
 cxl = 0
@@ -318,9 +342,10 @@ for i in range(3): cyl(cxl + 0.2 + i * 0.35, FLOOR + 1.1, -0.9, 0.06, 0.12, M['p
 box(cxl + 1.8, FLOOR + 1.3, -1.0, 0.6, 0.5, 0.5, M['putih'], bevel=0.03)
 for x in (-1.5, 0, 1.5):
     cyl(cxl + x, FLOOR + 0.35, 0.6, 0.06, 0.7, M['besi'], verts=8); cyl(cxl + x, FLOOR + 0.72, 0.6, 0.3, 0.05, M['kayuCerah'], verts=16)
-sofa(-7.5, 1.0, 3.0, M['sofaBiru']); sofa(7.5, 1.0, 3.0, M['sofaMerah'])
-cyl(-7.5, FLOOR + 0.2, -0.4, 0.5, 0.06, M['kayuCerah'], verts=20); cyl(7.5, FLOOR + 0.2, -0.4, 0.5, 0.06, M['kayuCerah'], verts=20)
-pokok_pasu(-3.8, 0.9, 1.3); pokok_pasu(3.8, 0.9, 1.3); pokok_pasu(-17.5, 0, 1.2); pokok_pasu(17.5, 0, 1.2)
+sofa(-9.0, 1.0, 3.0, M['sofaBiru']); sofa(9.0, 1.0, 3.0, M['sofaMerah'])
+cyl(-9.0, FLOOR + 0.2, -0.4, 0.5, 0.06, M['kayuCerah'], verts=20); cyl(9.0, FLOOR + 0.2, -0.4, 0.5, 0.06, M['kayuCerah'], verts=20)
+pokok_pasu(-3.8, 0.9, 1.3); pokok_pasu(3.8, 0.9, 1.3); pokok_pasu(-20.5, 0, 1.2); pokok_pasu(20.5, 0, 1.2)
+pokok_pasu(-14.0, -0.9, 1.0); pokok_pasu(14.0, -0.9, 1.0)
 empty('Pantri', 0, FLOOR, 0.0)
 
 # Papan tanda syarikat di depan
@@ -330,11 +355,11 @@ text('RICKY & CO.', 0, 1.4, 17.38, 0.55, M['emas'])
 text('Syarikat Ejen AI', 0, 0.95, 17.38, 0.25, M['putih'])
 
 # Pokok & lampu luar
-for (x, z, s) in [(-26, -18, 1.3), (-22, -21, 1.0), (-29, -6, 1.2), (-27, 4, 0.9), (24, -19, 1.2), (28, -9, 1.1), (27, 6, 1.3),
-                  (22, 20, 1.0), (-14, 21, 1.1), (-8, 23, 0.9), (10, 22, 1.2), (16, 24, 0.9), (0, -21, 1.3), (-12, -22, 1.0), (12, -21, 1.1), (30, 18, 1.0)]:
+for (x, z, s) in [(-29, -18, 1.3), (-25, -21, 1.0), (-31, -6, 1.2), (-29, 6, 0.9), (27, -19, 1.2), (31, -9, 1.1), (30, 6, 1.3),
+                  (24, 20, 1.0), (-16, 21, 1.1), (-8, 23, 0.9), (10, 22, 1.2), (17, 24, 0.9), (0, -21, 1.3), (-14, -22, 1.0), (14, -21, 1.1), (33, 18, 1.0)]:
     pokok_luar(x, z, s)
 for i in range(16):
-    a = random.uniform(0, 6.28); r = random.uniform(22, 34)
+    a = random.uniform(0, 6.28); r = random.uniform(25, 36)
     sph(math.cos(a) * r, 0.3, math.sin(a) * r * 0.75, 0.5, random.choice([M['daun'], M['daun3']]), sy=0.7, ico=True)
 for x in (-2.6, 2.6):
     for z in (17.5, 23.5):

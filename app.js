@@ -5,32 +5,59 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // ---------- Tetapan ----------
 const REPO = 'ARNA-Tech20/pejabat-syarikat';
 const LOG_API = `https://api.github.com/repos/${REPO}/contents/log`;
-const REFRESH_MS = 120000;
+const REFRESH_MS = 300000;
 const HARI = ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'];
 const KL = 8 * 3600e3;
 
 // Senarai ejen dan jadual (waktu Malaysia)
+// Jadual setiap tugas berjadual (kod log -> cron, waktu Malaysia)
+const JADUAL = {
+  KETUASTAF: '45 21 * * 0', PELANCAR: '10 21 * * 0', IDEA: '45 20 * * 6', DESIGNER: '10 20 * * 1', PEMASARAN: '40 20 * * 1',
+  WEBAPP: '15 20 * * 4', GAME: '20 20 * * 5', MOBILE: '35 20 * * 3', JUALAN: '25 20 * * 2', SOKONGAN: '5 20 * * *',
+  KEWANGAN: '20 20 1 * *', PEMATUHAN: '50 20 3 * *'
+};
+// Pasukan & ahli (mesti sama dengan PERATURAN-SYARIKAT.md dan model Blender)
+const PASUKAN = {
+  A: 'Pejabat CEO', B: 'Makmal Idea', C: 'Kreatif & Pemasaran', D: 'Pasukan Web App',
+  E: 'Studio Game', F: 'Pasukan Mobile App', G: 'Jualan & Sokongan', H: 'Kewangan & Pematuhan'
+};
+const m = (id, nama, peranan, emoji, bilik, kod, baju, rambut) => ({ id, nama, peranan, emoji, bilik, kod, pasukan: PASUKAN[bilik], cron: JADUAL[kod], baju, rambut });
 const ROSTER = [
-  { kod: 'KETUASTAF', nama: 'Ketua Staf', peranan: 'Pejabat CEO', emoji: '🧭', bilik: 'A', cron: '45 21 * * 0', baju: '#6b7cff', rambut: '#2b2b2b' },
-  { kod: 'PELANCAR', nama: 'Pelancar Hasil', peranan: 'Produk & Pelancaran', emoji: '🚀', bilik: 'B', cron: '10 21 * * 0', baju: '#ff8a3d', rambut: '#5a3a22' },
-  { kod: 'PENYELIDIK', nama: 'Penyelidik Pasaran', peranan: 'R&D', emoji: '🔭', bilik: 'B', cron: '15 21 1,15 * *', baju: '#2bb3a3', rambut: '#1d1d1d' },
-  { kod: 'DESIGNER', nama: 'Designer', peranan: 'Studio Kreatif', emoji: '🎨', bilik: 'C', cron: '10 20 * * 1', baju: '#e65ca8', rambut: '#7a3b8f' },
-  { kod: 'PEMASARAN', nama: 'Pemasaran', peranan: 'Studio Kreatif', emoji: '📣', bilik: 'C', cron: '40 20 * * 1', baju: '#f2c230', rambut: '#3b2a1a' },
-  { kod: 'DEVELOPER', nama: 'Developer', peranan: 'Makmal Teknologi', emoji: '💻', bilik: 'D', cron: '15 20 * * 4', baju: '#3d8bff', rambut: '#111111' },
-  { kod: 'QA', nama: 'QA / Juruaudit', peranan: 'Makmal Teknologi', emoji: '🔍', bilik: 'D', cron: '35 20 * * 3', baju: '#8e5cf0', rambut: '#4a2f1c' },
-  { kod: 'JUALAN', nama: 'Jualan B2B', peranan: 'Jualan & Sokongan', emoji: '🤝', bilik: 'E', cron: '25 20 * * 2', baju: '#27a845', rambut: '#262626' },
-  { kod: 'SOKONGAN', nama: 'Sokongan Pelanggan', peranan: 'Jualan & Sokongan', emoji: '💬', bilik: 'E', cron: '5 20 * * *', baju: '#17a2d8', rambut: '#6b4423' },
-  { kod: 'KEWANGAN', nama: 'Kewangan (CFO)', peranan: 'Kewangan & Pematuhan', emoji: '💰', bilik: 'F', cron: '20 20 1 * *', baju: '#c9a227', rambut: '#1f1f1f' },
-  { kod: 'PEMATUHAN', nama: 'Pematuhan', peranan: 'Kewangan & Pematuhan', emoji: '⚖️', bilik: 'F', cron: '50 20 3 * *', baju: '#a05a2c', rambut: '#333333' }
+  m('KETUASTAF', 'Ketua Staf', 'Ketua Staf', '🧭', 'A', 'KETUASTAF', '#6b7cff', '#2b2b2b'),
+  m('HANA', 'Hana', 'Pengurus Produk', '🚀', 'A', 'PELANCAR', '#ff8a3d', '#5a3a22'),
+  m('IDRIS', 'Idris', 'Ketua Makmal Idea', '💡', 'B', 'IDEA', '#f2c230', '#1d1d1d'),
+  m('SITI', 'Siti', 'Pemburu Trend', '🔭', 'B', 'IDEA', '#2bb3a3', '#3b2a1a'),
+  m('KUMAR', 'Kumar', 'Penganalisis Data', '📊', 'B', 'IDEA', '#5f7dd6', '#111111'),
+  m('MEILING', 'Mei Ling', 'Designer', '🎨', 'C', 'DESIGNER', '#e65ca8', '#1a1a1a'),
+  m('HAFIZ', 'Hafiz', 'Ketua Pemasaran', '📣', 'C', 'PEMASARAN', '#f28a30', '#2a1d12'),
+  m('AINA', 'Aina', 'Penulis Kandungan', '✍️', 'C', 'PEMASARAN', '#b07cf0', '#6b4423'),
+  m('FARID', 'Farid', 'Ketua Teknikal', '🧑‍💻', 'D', 'WEBAPP', '#3d8bff', '#111111'),
+  m('NADIA', 'Nadia', 'Frontend', '🖥️', 'D', 'WEBAPP', '#4fc3f7', '#3b2a1a'),
+  m('RAJ', 'Raj', 'Backend', '🗄️', 'D', 'WEBAPP', '#2f5fb3', '#1a1a1a'),
+  m('ZUL', 'Zul', 'QA', '🔍', 'D', 'WEBAPP', '#8e5cf0', '#4a2f1c'),
+  m('AMIR', 'Amir', 'Producer', '🎬', 'E', 'GAME', '#ff4fa3', '#222222'),
+  m('LINA', 'Lina', 'Game Designer', '🎲', 'E', 'GAME', '#ff7a59', '#7a3b2a'),
+  m('DANIEL', 'Daniel', 'Unity Dev', '🕹️', 'E', 'GAME', '#30c0e0', '#c9a36b'),
+  m('YANA', 'Yana', 'Artis', '🖌️', 'E', 'GAME', '#f2d14a', '#2b1b10'),
+  m('HAKIM', 'Hakim', 'Ketua Mobile', '📱', 'F', 'MOBILE', '#7a5cff', '#111111'),
+  m('SARA', 'Sara', 'Expo Dev', '⚛️', 'F', 'MOBILE', '#61dafb', '#4a2f1c'),
+  m('BEN', 'Ben', 'Android & Widget', '🤖', 'F', 'MOBILE', '#3ddc84', '#262626'),
+  m('IKA', 'Ika', 'QA Mobile', '🧪', 'F', 'MOBILE', '#e0607e', '#3b2a1a'),
+  m('RIZAL', 'Rizal', 'Jualan B2B', '🤝', 'G', 'JUALAN', '#27a845', '#262626'),
+  m('TINI', 'Tini', 'Sokongan Pelanggan', '💬', 'G', 'SOKONGAN', '#17a2d8', '#6b4423'),
+  m('LIYANA', 'Liyana', 'CFO', '💰', 'H', 'KEWANGAN', '#c9a227', '#1f1f1f'),
+  m('AZMAN', 'Azman', 'Pematuhan', '⚖️', 'H', 'PEMATUHAN', '#a05a2c', '#333333')
 ];
-const CEO = { kod: 'CEO', nama: 'Ricky (CEO)', peranan: 'Ketua Pegawai Eksekutif', emoji: '👑', bilik: 'A', baju: '#1f2a44', rambut: '#111111', ceo: true };
+const CEO = { id: 'CEO', kod: 'CEO', nama: 'Ricky', peranan: 'CEO', pasukan: 'Pejabat CEO', emoji: '👑', bilik: 'A', baju: '#1f2a44', rambut: '#111111', ceo: true };
+const SEMUA = [CEO, ...ROSTER];
+const TUGAS = Object.keys(JADUAL);
+const ketuaTugas = kod => ROSTER.find(a => a.kod === kod);
 
 // Bilik (mesti sama dengan model Blender models/office.glb)
-const BILIK = {
-  A: { x: -12.5, z: -7.5, n: 'PEJABAT CEO' }, B: { x: 0, z: -7.5, n: 'PRODUK & R&D' }, C: { x: 12.5, z: -7.5, n: 'STUDIO KREATIF' },
-  D: { x: -12.5, z: 7.5, n: 'MAKMAL TEKNOLOGI' }, E: { x: 0, z: 7.5, n: 'JUALAN & SOKONGAN' }, F: { x: 12.5, z: 7.5, n: 'KEWANGAN & PEMATUHAN' }
-};
-const RW = 12, RD = 11, LANTAI = 0.3;
+const BILIK = {};
+for (const [k, x, z] of [['A', -16.5, -7.5], ['B', -5.5, -7.5], ['C', 5.5, -7.5], ['D', 16.5, -7.5], ['E', -16.5, 7.5], ['F', -5.5, 7.5], ['G', 5.5, 7.5], ['H', 16.5, 7.5]])
+  BILIK[k] = { x, z, n: PASUKAN[k].toUpperCase() };
+const RW = 11, RD = 11, LANTAI = 0.3;
 const PANTRI = { x: 0, z: 0 };
 
 // ---------- Utiliti masa & status ----------
@@ -135,6 +162,34 @@ function gelembung() {
   return sp;
 }
 
+function balut(g, teks, lebar, maks) {
+  const kata = teks.split(/\s+/); const baris = []; let kini = '';
+  for (const w of kata) { const cuba = kini ? kini + ' ' + w : w; if (g.measureText(cuba).width > lebar && kini) { baris.push(kini); kini = w; } else kini = cuba; if (baris.length >= maks) break; }
+  if (baris.length < maks && kini) baris.push(kini);
+  if (baris.length === maks && kata.join(' ').length > baris.join(' ').length) baris[maks - 1] = baris[maks - 1].replace(/\s*\S*$/, '') + '…';
+  return baris;
+}
+function bualSprite() {
+  const c = document.createElement('canvas'); c.width = 768; c.height = 256;
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  sp.scale.set(8.1, 2.7, 1); sp.renderOrder = 12; sp.visible = false;
+  sp.userData.set = (teks) => {
+    const g = c.getContext('2d'); g.clearRect(0, 0, 768, 256);
+    g.font = '600 34px system-ui,"Segoe UI",Roboto,sans-serif';
+    const baris = balut(g, teks, 690, 3);
+    const h = 36 + baris.length * 44, y0 = 214 - h;
+    g.fillStyle = 'rgba(255,255,255,0.97)'; g.strokeStyle = '#2f3e5c'; g.lineWidth = 4;
+    g.beginPath(); g.roundRect(8, y0, 752, h, 26); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(360, y0 + h - 2); g.lineTo(384, 250); g.lineTo(408, y0 + h - 2); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(360, y0 + h); g.lineTo(384, 250); g.lineTo(408, y0 + h); g.stroke();
+    g.fillStyle = '#1d2433'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    baris.forEach((b, i) => g.fillText(b, 384, y0 + 40 + i * 44));
+    tex.needsUpdate = true;
+  };
+  return sp;
+}
+
 // ---------- Muat model Blender ----------
 let AGEN = [];
 const pintu = k => { const b = BILIK[k]; return b.z < 0 ? b.z + RD / 2 : b.z - RD / 2; };
@@ -157,12 +212,11 @@ async function muatModel() {
     sp.position.copy(e.getWorldPosition(new THREE.Vector3())).add(new THREE.Vector3(0, 0.5, 0)); scene.add(sp);
   }
   const templat = person.scene.getObjectByName('Person') || person.scene;
-  const SEMUA = [CEO, ...ROSTER];
   AGEN = SEMUA.map(a => {
-    const seatE = office.scene.getObjectByName('Seat_' + a.kod);
+    const seatE = office.scene.getObjectByName('Seat_' + a.id);
     const kerusi = seatE ? seatE.getWorldPosition(new THREE.Vector3()) : new THREE.Vector3(BILIK[a.bilik].x, LANTAI, BILIK[a.bilik].z);
     kerusi.y = LANTAI;
-    const skrin = office.scene.getObjectByName('Screen_' + a.kod);
+    const skrin = office.scene.getObjectByName('Screen_' + a.id);
     if (skrin) { skrin.material = skrin.material.clone(); skrin.material.emissive = new THREE.Color('#000'); }
     const g = templat.clone(true);
     const baju = new THREE.MeshStandardMaterial({ color: a.baju, roughness: 0.8 });
@@ -172,15 +226,16 @@ async function muatModel() {
       o.castShadow = true; o.receiveShadow = false;
       if (o.material.name === 'Baju') o.material = baju;
       else if (o.material.name === 'Rambut') o.material = rambut;
-      o.userData.kod = a.kod;
+      o.userData.id = a.id;
     });
     const mahkota = g.getObjectByName('Crown'); if (mahkota) mahkota.visible = !!a.ceo;
     const badan = new THREE.Group(); badan.add(g); badan.position.copy(kerusi); scene.add(badan);
     const label = teksSprite(a.emoji + ' ' + a.nama, { saiz: 30, tinggi: 0.38 }); label.position.set(0, 2.55, 0); badan.add(label);
     const bub = gelembung(); bub.position.set(0, 3.15, 0); bub.visible = false; badan.add(bub);
-    badan.traverse(o => { o.userData.kod = a.kod; });
+    const bual = bualSprite(); bual.position.set(0, 4.5, 0); badan.add(bual);
+    badan.traverse(o => { o.userData.id = a.id; });
     return {
-      a, badan, g, skrin, kerusi, bub, label,
+      a, badan, g, skrin, kerusi, bub, bual, label,
       kaki: [g.getObjectByName('LegL'), g.getObjectByName('LegR')],
       tangan: [g.getObjectByName('ArmL'), g.getObjectByName('ArmR')],
       kepala: g.getObjectByName('HeadPivot'),
@@ -255,7 +310,12 @@ function tick() {
       if (tl) { tl.rotation.x = gerak ? Math.sin(t * 1.5 + o.fasa) * 0.06 : 0; tr.rotation.x = -1.0; }
       if (o.kepala) o.kepala.rotation.x = gerak ? Math.sin(t * 0.8 + o.fasa) * 0.08 : 0;
     }
-    if (o.k === 'rehat') o.bub.visible = !o.jalan.length && Math.abs(p.z - PANTRI.z) < 1.2 && Math.abs(p.x - PANTRI.x) < 2.6;
+    if (o.k === 'rehat') {
+      const dengar = now < (o.dengar || 0);
+      o.bub.userData.set(dengar ? '💬' : IKON.rehat);
+      o.bub.visible = dengar || (!o.jalan.length && Math.abs(p.z - PANTRI.z) < 1.2 && Math.abs(p.x - PANTRI.x) < 2.6);
+    }
+    if (o.bual.visible) o.bub.visible = false;
     if (o.bub.visible && gerak) o.bub.position.y = 3.15 + Math.sin(t * 2 + o.fasa) * 0.05;
   }
   controls.update();
@@ -281,7 +341,7 @@ function saiz() {
   renderer.setSize(w, h);
   camera.aspect = w / h;
   const asp = w / h;
-  camera.position.setLength(asp >= 1.25 ? 54 : Math.min(95, 54 * 0.7 / asp));
+  camera.position.setLength(asp >= 1.25 ? 60 : Math.min(105, 60 * 0.75 / asp));
   camera.updateProjectionMatrix();
 }
 addEventListener('resize', saiz);
@@ -296,7 +356,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ptr, camera);
   const hit = ray.intersectObjects(AGEN.map(o => o.badan), true)[0];
-  if (hit && hit.object.userData.kod) { pilihan = hit.object.userData.kod; lukisButiran(); document.getElementById('side').classList.add('open'); }
+  if (hit && hit.object.userData.id) { pilihan = hit.object.userData.id; lukisButiran(); document.getElementById('side').classList.add('open'); }
 });
 document.getElementById('toggle').addEventListener('click', () => document.getElementById('side').classList.toggle('open'));
 
@@ -305,39 +365,49 @@ function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.
 function lukisButiran() {
   const box = document.getElementById('det'); box.replaceChildren();
   if (!pilihan) { box.append(el('div', 'muted', 'Klik mana-mana watak dalam pejabat.')); return; }
-  if (pilihan === 'CEO') { box.append(el('div', 'nm', '👑 Ricky — CEO'), el('div', 'muted', 'Semua ejen melapor kepada anda melalui Ringkasan CEO setiap Ahad malam.')); return; }
-  const a = ROSTER.find(x => x.kod === pilihan); if (!a) return;
-  const k = keadaan(a.kod), b = terkini(a.kod), n = seterusnya(a.cron);
   const row = (l, v) => { const r = el('div', 'r'); r.append(el('span', null, l), el('b', null, v)); box.append(r); };
+  if (pilihan === 'CEO') {
+    box.append(el('div', 'nm', '👑 Ricky — CEO'), el('div', 'muted', 'Semua pasukan melapor kepada anda. Lulus atau tolak idea dengan label lulus-ceo / ditolak-ceo pada isu di Papan Syarikat.'));
+    row('Idea menunggu keputusan anda', String(IDEA.filter(i => i.label.includes('perlu-ceo') && !i.tutup).length));
+    row('Pasukan', '8 pasukan · 24 ahli');
+    return;
+  }
+  const a = ROSTER.find(x => x.id === pilihan); if (!a) return;
+  const k = keadaan(a.kod), b = terkini(a.kod), n = seterusnya(a.cron);
   box.append(el('div', 'nm', a.emoji + ' ' + a.nama + ' — ' + a.peranan));
+  row('Pasukan', a.pasukan);
   row('Keadaan', IKON[k] + ' ' + LABEL[k]);
-  row('Jadual', cronTeks(a.cron));
+  row('Jadual pasukan', cronTeks(a.cron));
   row('Seterusnya', tarikh(n) + ' (' + relatif(n) + ')');
-  if (b) {
-    row('Status terakhir', b.keadaan);
-    row('Masa', tarikh(b.t) + ' (' + relatif(b.t) + ')');
-    if (/^https:\/\/github\.com\//.test(b.url)) { const l = el('a', null, 'Lihat nota status di GitHub'); l.href = b.url; l.target = '_blank'; l.rel = 'noopener'; box.append(l); }
-  } else row('Status terakhir', 'Belum pernah melapor');
+  if (b) row('Status terakhir', b.keadaan + ' · ' + relatif(b.t));
+  else row('Status terakhir', 'Belum pernah melapor');
+  const mine = BUAL.filter(x => x.siapa === a.id);
+  if (mine.length) {
+    const t = mine[0]; const d = el('div', 'muted', '“' + t.mesej.slice(0, 160) + (t.mesej.length > 160 ? '…' : '') + '” — ' + relatif(t.t));
+    d.style.marginTop = '6px'; box.append(d);
+  }
+  if (b && /^https:\/\/github\.com\//.test(b.url)) { const l = el('a', null, 'Lihat nota status di GitHub'); l.href = b.url; l.target = '_blank'; l.rel = 'noopener'; box.append(l); }
 }
 function lukisPanel(ralat) {
   const now = Date.now();
-  const ks = ROSTER.map(a => keadaan(a.kod));
+  const ks = TUGAS.map(k => keadaan(k));
   document.getElementById('t-kerja').textContent = ks.filter(k => k === 'kerja').length;
   document.getElementById('t-gagal').textContent = ks.filter(k => k === 'gagal').length;
-  document.getElementById('t-siap').textContent = ROSTER.filter(a => LOG.some(r => r.kod === a.kod && r.keadaan === 'SIAP' && now - r.t < 24 * 36e5)).length;
-  const nx = ROSTER.map(a => ({ a, t: seterusnya(a.cron) })).filter(x => x.t).sort((x, y) => x.t - y.t)[0];
-  document.getElementById('t-next').textContent = nx ? nx.a.emoji + ' ' + nx.a.nama : '—';
+  document.getElementById('t-siap').textContent = TUGAS.filter(k => LOG.some(r => r.kod === k && r.keadaan === 'SIAP' && now - r.t < 24 * 36e5)).length;
+  const nx = TUGAS.map(k => ({ a: ketuaTugas(k), t: seterusnya(JADUAL[k]) })).filter(x => x.t).sort((x, y) => x.t - y.t)[0];
+  document.getElementById('t-next').textContent = nx ? nx.a.emoji + ' ' + nx.a.pasukan : '—';
   document.getElementById('t-next2').textContent = nx ? relatif(nx.t) : 'Giliran seterusnya';
   const feed = document.getElementById('feed'); feed.replaceChildren();
   if (ralat) feed.append(el('li', 'err', ralat));
   const rows = LOG.slice().sort((x, y) => y.t - x.t).slice(0, 12);
-  if (!rows.length && !ralat) feed.append(el('li', 'muted', 'Belum ada aktiviti. Ejen pertama (💬 Sokongan Pelanggan) mula setiap hari pukul 8:05 malam.'));
+  if (!rows.length && !ralat) feed.append(el('li', 'muted', 'Belum ada aktiviti. Tugas pertama (💬 Tini, Sokongan Pelanggan) mula setiap hari pukul 8:05 malam.'));
   for (const r of rows) {
-    const a = ROSTER.find(x => x.kod === r.kod); const li = el('li');
-    li.append(el('time', null, tarikh(r.t)), document.createTextNode((a ? a.emoji + ' ' + a.nama : r.kod) + ' '), el('span', 'tag ' + r.keadaan, r.keadaan === 'MULA' ? 'mula bekerja' : r.keadaan === 'SIAP' ? 'siap' : r.keadaan === 'GAGAL' ? 'gagal' : r.keadaan));
+    const a = ketuaTugas(r.kod); const li = el('li');
+    li.append(el('time', null, tarikh(r.t)), document.createTextNode((a ? a.emoji + ' ' + (r.kod === 'PEMASARAN' || r.kod === 'DESIGNER' || r.kod === 'JUALAN' || r.kod === 'SOKONGAN' || r.kod === 'KEWANGAN' || r.kod === 'PEMATUHAN' || r.kod === 'KETUASTAF' || r.kod === 'PELANCAR' ? a.nama : a.pasukan) : r.kod) + ' '), el('span', 'tag ' + r.keadaan, r.keadaan === 'MULA' ? 'mula bekerja' : r.keadaan === 'SIAP' ? 'siap' : r.keadaan === 'GAGAL' ? 'gagal' : r.keadaan));
     feed.append(li);
   }
-  document.getElementById('src').textContent = 'Sumber: folder log/ dalam repo ' + REPO + ' · dikemas kini ' + tarikh(now);
+  document.getElementById('src').textContent = 'Sumber: log/ dan Issues dalam repo ' + REPO + ' · dikemas kini ' + tarikh(now);
+  lukisPapan();
   lukisButiran();
 }
 
@@ -345,8 +415,8 @@ const DEMO = new URLSearchParams(location.search).has('demo');
 function logDemo() {
   const n = Date.now(), m = 6e4;
   const f = (kod, k, ago) => ({ t: n - ago * m, kod, keadaan: k, url: '', nama: 'demo' });
-  return [f('DEVELOPER', 'MULA', 5), f('DESIGNER', 'MULA', 12), f('PEMASARAN', 'MULA', 3), f('QA', 'SIAP', 40), f('QA', 'MULA', 70),
-    f('SOKONGAN', 'SIAP', 90), f('SOKONGAN', 'MULA', 95), f('JUALAN', 'GAGAL', 200), f('KETUASTAF', 'MULA', 1), f('PELANCAR', 'SIAP', 30)];
+  return [f('WEBAPP', 'MULA', 5), f('GAME', 'MULA', 12), f('DESIGNER', 'MULA', 3), f('MOBILE', 'SIAP', 40), f('MOBILE', 'MULA', 70),
+    f('SOKONGAN', 'SIAP', 90), f('SOKONGAN', 'MULA', 95), f('JUALAN', 'GAGAL', 200), f('IDEA', 'MULA', 1), f('PELANCAR', 'SIAP', 30)];
 }
 async function muatLog() {
   if (DEMO) { LOG = logDemo(); kemasKiniKeadaan(); lukisPanel('Mod demo — data contoh, bukan status sebenar.'); return; }
@@ -360,6 +430,107 @@ async function muatLog() {
   } catch (e) { kemasKiniKeadaan(); lukisPanel('Log tidak dapat dimuatkan: ' + e.message); }
 }
 
+// ---------- Papan Syarikat (GitHub Issues) ----------
+const ISU_API = 'https://api.github.com/repos/' + REPO + '/issues';
+let BUAL = [], IDEA = [];
+const KEPALA = /^\s*\*\*\s*(\S+)\s+([^·*]+?)\s*·\s*([^(*]+?)\s*\(([^)]*)\)\s*:\s*\*\*\s*(.*)$/s;
+const normal = t => t.normalize('NFKD').replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
+function cariAhli(nama, pasukan) {
+  const n = normal(nama);
+  if (n === 'ricky' || n === 'rickyceo') return CEO;
+  const calon = SEMUA.filter(a => normal(a.nama) === n);
+  return calon.find(a => normal(a.pasukan) === normal(pasukan)) || calon[0] || null;
+}
+function hurai(body) {
+  if (!body) return null;
+  const baris = body.replace(/\r/g, '').split('\n').find(l => l.trim()); if (!baris) return null;
+  const x = baris.match(KEPALA); if (!x) return null;
+  const a = cariAhli(x[2], x[4]); if (!a) return null;
+  const sisa = body.slice(body.indexOf(baris) + baris.length).replace(/[#*_`>]/g, '').replace(/\s+/g, ' ').trim();
+  const mesej = (x[5].replace(/[*_`]/g, '').trim() || sisa).trim();
+  return { siapa: a.id, mesej };
+}
+function bualDemo() {
+  const n = Date.now(), mn = 6e4;
+  const b = (siapa, mesej, ago, tajuk) => ({ siapa, mesej, t: n - ago * mn, url: '', tajuk });
+  BUAL = [
+    b('LINA', 'Saya cadang tambah cabaran harian dalam Gabung Kuih supaya pemain datang balik setiap hari.', 4, '💡 Idea: Cabaran harian Gabung Kuih'),
+    b('DANIEL', 'Boleh — kerja kecil, saiz S. Saya buat prototaip dalam branch minggu ni.', 9, '💡 Idea: Cabaran harian Gabung Kuih'),
+    b('HAFIZ', 'Pemasaran sokong. Ini bahan bagus untuk post "streak 7 hari".', 14, '💡 Idea: Cabaran harian Gabung Kuih'),
+    b('SITI', 'Trend minggu ni: ramai cari templat slip gaji untuk SME selepas bajet. Peluang untuk KiraSlip.', 30, '📅 Mesyuarat Mingguan'),
+    b('FARID', 'Web App boleh tambah halaman templat percuma sebagai magnet SEO untuk KiraSlip.', 36, '📅 Mesyuarat Mingguan'),
+    b('LIYANA', 'Setuju, kos sifar. Pastikan tiada janji harga baharu sebelum CEO lulus.', 41, '📅 Mesyuarat Mingguan'),
+    b('BEN', 'Widget Batik dah siap ujian di 3 saiz skrin. Menunggu ikon baharu dari Mei Ling.', 55, '📅 Mesyuarat Mingguan'),
+    b('MEILING', 'Ikon siap esok, saya hantar dua pilihan warna.', 58, '📅 Mesyuarat Mingguan'),
+    b('KETUASTAF', 'Idea langganan premium Kira Gaji saya tanda perlu-ceo — ada perbelanjaan.', 80, '💡 Idea: Kira Gaji Premium')
+  ];
+  IDEA = [
+    { tajuk: 'Cabaran harian Gabung Kuih', label: ['disokong', 'sedang-dibina'], pasukan: 'Studio Game', url: '' },
+    { tajuk: 'Halaman templat slip gaji percuma', label: ['disokong'], pasukan: 'Pasukan Web App', url: '' },
+    { tajuk: 'Kira Gaji Premium', label: ['perlu-ceo'], pasukan: 'Pasukan Mobile App', url: '' }
+  ];
+}
+async function muatPapan() {
+  if (DEMO) { bualDemo(); lukisPapan(); return; }
+  try {
+    const since = new Date(Date.now() - 14 * 864e5).toISOString();
+    const [ri, rk] = await Promise.all([
+      fetch(ISU_API + '?state=all&sort=updated&per_page=40&since=' + since, { headers: { Accept: 'application/vnd.github+json' } }),
+      fetch(ISU_API + '/comments?sort=created&direction=desc&per_page=60&since=' + since, { headers: { Accept: 'application/vnd.github+json' } })
+    ]);
+    if (!ri.ok || !rk.ok) throw new Error('GitHub menjawab ' + (ri.ok ? rk.status : ri.status));
+    const isu = (await ri.json()).filter(i => !i.pull_request), kom = await rk.json();
+    const tajukIkut = {}; for (const i of isu) tajukIkut[i.url] = i.title;
+    const out = [];
+    for (const i of isu) { const h = hurai(i.body); if (h) out.push({ ...h, t: Date.parse(i.created_at), url: i.html_url, tajuk: i.title }); }
+    for (const c of kom) { const h = hurai(c.body); if (h) out.push({ ...h, t: Date.parse(c.created_at), url: c.html_url, tajuk: tajukIkut[c.issue_url] || '' }); }
+    BUAL = out.filter(x => /^https:\/\/github\.com\//.test(x.url)).sort((a, b) => b.t - a.t);
+    IDEA = isu.filter(i => i.labels.some(l => l.name === 'idea')).map(i => {
+      const lb = i.labels.map(l => l.name);
+      const p = lb.find(n => n.startsWith('pasukan:'));
+      const pk = { 'pasukan:ceo': 'Pejabat CEO', 'pasukan:idea': 'Makmal Idea', 'pasukan:kreatif': 'Kreatif & Pemasaran', 'pasukan:webapp': 'Pasukan Web App', 'pasukan:game': 'Studio Game', 'pasukan:mobile': 'Pasukan Mobile App', 'pasukan:jualan': 'Jualan & Sokongan', 'pasukan:kewangan': 'Kewangan & Pematuhan' }[p] || '';
+      return { tajuk: i.title.replace(/^💡\s*Idea:\s*/i, ''), label: lb, pasukan: pk, url: i.html_url, tutup: i.state === 'closed' };
+    });
+    lukisPapan();
+  } catch (e) { lukisPapan('Papan tidak dapat dimuatkan: ' + e.message); }
+}
+const STATUS_IDEA = ['ditolak-ceo', 'siap', 'sedang-dibina', 'lulus-ceo', 'perlu-ceo', 'disokong'];
+const TEKS_STATUS = { 'ditolak-ceo': 'ditolak CEO', siap: 'siap', 'sedang-dibina': 'sedang dibina', 'lulus-ceo': 'lulus CEO', 'perlu-ceo': 'tunggu CEO', disokong: 'disokong' };
+function lukisPapan(ralat) {
+  const ul = document.getElementById('papan'); if (!ul) return; ul.replaceChildren();
+  if (ralat) ul.append(el('li', 'err', ralat));
+  if (!BUAL.length && !ralat) ul.append(el('li', 'muted', 'Belum ada perbincangan. Pasukan akan mula berbual di GitHub Issues bila tugas mereka berjalan.'));
+  for (const b of BUAL.slice(0, 10)) {
+    const a = SEMUA.find(x => x.id === b.siapa); const li = el('li');
+    const isi = [el('time', null, relatif(b.t)), el('span', 'who', a.emoji + ' ' + a.nama + ' '), el('span', 'muted', '(' + a.pasukan + ')'), el('div', 'msg', b.mesej.slice(0, 180) + (b.mesej.length > 180 ? '…' : ''))];
+    if (b.url) { const l = el('a'); l.href = b.url; l.target = '_blank'; l.rel = 'noopener'; l.append(...isi); li.append(l); } else li.append(...isi);
+    ul.append(li);
+  }
+  const ui = document.getElementById('idea'); if (!ui) return; ui.replaceChildren();
+  if (!IDEA.length) ui.append(el('li', 'muted', 'Belum ada idea. Makmal Idea bermesyuarat setiap Sabtu 8:45 malam.'));
+  for (const i of IDEA.slice(0, 8)) {
+    const st = STATUS_IDEA.find(s => i.label.includes(s)) || (i.tutup ? 'siap' : null);
+    const li = el('li'); const isi = [el('span', null, '💡 ' + i.tajuk + ' ')];
+    if (st) isi.push(el('span', 'tag ' + st, TEKS_STATUS[st]));
+    if (i.pasukan) isi.push(el('div', 'muted', i.pasukan));
+    if (i.url) { const l = el('a'); l.href = i.url; l.target = '_blank'; l.rel = 'noopener'; l.append(...isi); li.append(l); } else li.append(...isi);
+    ui.append(li);
+  }
+}
+// Gelembung cakap bergilir: mainkan semula perbualan terkini dalam pejabat
+let giliran = 0, bualAktif = null;
+function mainBual() {
+  if (bualAktif) { bualAktif.bual.visible = false; bualAktif = null; }
+  const senarai = BUAL.slice(0, 12).reverse(); if (!senarai.length || !AGEN.length) return;
+  const b = senarai[giliran++ % senarai.length];
+  const o = AGEN.find(x => x.a.id === b.siapa); if (!o) return;
+  o.bual.userData.set(b.mesej.length > 120 ? b.mesej.slice(0, 118) + '…' : b.mesej);
+  o.bual.visible = true; bualAktif = o;
+  // pendengar dari pasukan lain menoleh: ahli seterusnya yang membalas dalam topik yang sama
+  const balas = senarai.find((x, i) => i > senarai.indexOf(b) && x.tajuk === b.tajuk && x.siapa !== b.siapa);
+  if (balas) { const p = AGEN.find(x => x.a.id === balas.siapa); if (p) p.dengar = performance.now() + 6500; }
+}
+
 function jamHud() {
   document.getElementById('clock').textContent = new Intl.DateTimeFormat('ms-MY', { timeZone: 'Asia/Kuala_Lumpur', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date()) + ' (waktu Malaysia)';
 }
@@ -367,8 +538,10 @@ function jamHud() {
 saiz(); cahaya(); lukisPanel(); jamHud();
 await muatModel();
 kemasKiniKeadaan();
-muatLog();
+muatLog(); muatPapan();
 setInterval(muatLog, REFRESH_MS);
+setInterval(muatPapan, REFRESH_MS);
+setTimeout(mainBual, 2500); setInterval(mainBual, 7000);
 setInterval(() => { jamHud(); cahaya(); }, 1000);
 setInterval(() => { kemasKiniKeadaan(); lukisPanel(); }, 60000);
 requestAnimationFrame(tick);
