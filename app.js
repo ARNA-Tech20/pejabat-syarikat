@@ -12,9 +12,9 @@ const KL = 8 * 3600e3;
 // Senarai ejen dan jadual (waktu Malaysia)
 // Jadual setiap tugas berjadual (kod log -> cron, waktu Malaysia)
 const JADUAL = {
-  KETUASTAF: '45 21 * * 0', PELANCAR: '10 21 * * 0', IDEA: '45 20 * * 6', DESIGNER: '10 20 * * 1', PEMASARAN: '40 20 * * 1',
-  WEBAPP: '15 20 * * 4', GAME: '20 20 * * 5', MOBILE: '35 20 * * 3', JUALAN: '25 20 * * 2', SOKONGAN: '5 20 * * *',
-  KEWANGAN: '20 20 1 * *', PEMATUHAN: '50 20 3 * *', SENIOR: '30 21 * * 6'
+  KETUASTAF: '10 21 * * 0', IDEA: '45 20 * * 6', PEMASARAN: '10 20 * * 1',
+  WEBAPP: '15 20 * * 4', GAME: '20 20 * * 5', MOBILE: '35 20 * * 3', JUALAN: '25 20 * * 2', SOKONGAN: '5 20 * * 1,3,5',
+  KEWANGAN: '20 20 1 * *', SENIOR: '30 21 * * 6'
 };
 // Pasukan & ahli (mesti sama dengan PERATURAN-SYARIKAT.md dan model Blender)
 const PASUKAN = {
@@ -25,11 +25,11 @@ const PASUKAN = {
 const m = (id, nama, peranan, emoji, bilik, kod, baju, rambut) => ({ id, nama, peranan, emoji, bilik, kod, pasukan: PASUKAN[bilik], cron: JADUAL[kod], baju, rambut });
 const ROSTER = [
   m('KETUASTAF', 'Ketua Staf', 'Ketua Staf', '🧭', 'A', 'KETUASTAF', '#6b7cff', '#2b2b2b'),
-  m('HANA', 'Hana', 'Pengurus Produk', '🚀', 'A', 'PELANCAR', '#ff8a3d', '#5a3a22'),
+  m('HANA', 'Hana', 'Pengurus Produk', '🚀', 'A', 'KETUASTAF', '#ff8a3d', '#5a3a22'),
   m('IDRIS', 'Idris', 'Ketua Makmal Idea', '💡', 'B', 'IDEA', '#f2c230', '#1d1d1d'),
   m('SITI', 'Siti', 'Pemburu Trend', '🔭', 'B', 'IDEA', '#2bb3a3', '#3b2a1a'),
   m('KUMAR', 'Kumar', 'Penganalisis Data', '📊', 'B', 'IDEA', '#5f7dd6', '#111111'),
-  m('MEILING', 'Mei Ling', 'Designer', '🎨', 'C', 'DESIGNER', '#e65ca8', '#1a1a1a'),
+  m('MEILING', 'Mei Ling', 'Designer', '🎨', 'C', 'PEMASARAN', '#e65ca8', '#1a1a1a'),
   m('HAFIZ', 'Hafiz', 'Ketua Pemasaran', '📣', 'C', 'PEMASARAN', '#f28a30', '#2a1d12'),
   m('AINA', 'Aina', 'Penulis Kandungan', '✍️', 'C', 'PEMASARAN', '#b07cf0', '#6b4423'),
   m('FARID', 'Farid', 'Ketua Teknikal', '🧑‍💻', 'D', 'WEBAPP', '#3d8bff', '#111111'),
@@ -47,7 +47,7 @@ const ROSTER = [
   m('RIZAL', 'Rizal', 'Jualan B2B', '🤝', 'G', 'JUALAN', '#27a845', '#262626'),
   m('TINI', 'Tini', 'Sokongan Pelanggan', '💬', 'G', 'SOKONGAN', '#17a2d8', '#6b4423'),
   m('LIYANA', 'Liyana', 'CFO', '💰', 'H', 'KEWANGAN', '#c9a227', '#1f1f1f'),
-  m('AZMAN', 'Azman', 'Pematuhan', '⚖️', 'H', 'PEMATUHAN', '#a05a2c', '#333333'),
+  m('AZMAN', 'Azman', 'Pematuhan', '⚖️', 'H', 'KEWANGAN', '#a05a2c', '#333333'),
   m('FAIZAL', 'Dr. Faizal', 'CTO', '🧠', 'I', 'SENIOR', '#2b2f3a', '#9a9a9a'),
   m('ROSNAH', 'Puan Rosnah', 'COO', '🎯', 'I', 'SENIOR', '#7a1f3d', '#2a1a12'),
   m('WEIJIE', 'Wei Jie', 'CPO', '📈', 'I', 'SENIOR', '#0f5f5a', '#111111')
@@ -55,7 +55,8 @@ const ROSTER = [
 const CEO = { id: 'CEO', kod: 'CEO', nama: 'Ricky', peranan: 'CEO', pasukan: 'Pejabat CEO', emoji: '👑', bilik: 'A', baju: '#1f2a44', rambut: '#111111', ceo: true };
 const SEMUA = [CEO, ...ROSTER];
 const TUGAS = Object.keys(JADUAL);
-const ketuaTugas = kod => ROSTER.find(a => a.kod === kod);
+const ALIAS_KOD = { PELANCAR: 'KETUASTAF', DESIGNER: 'PEMASARAN', PEMATUHAN: 'KEWANGAN', DEVELOPER: 'WEBAPP', QA: 'MOBILE', PENYELIDIK: 'IDEA' };
+const ketuaTugas = kod => ROSTER.find(a => a.kod === (ALIAS_KOD[kod] || kod));
 
 // Bilik (mesti sama dengan model Blender models/office.glb)
 const BILIK = {};
@@ -66,10 +67,10 @@ const PANTRI = { x: 0, z: 0 };
 
 // ---------- Utiliti masa & status ----------
 function jam(h, m) { const s = h < 12 ? 'pg' : h < 15 ? 'tgh' : h < 19 ? 'ptg' : 'mlm'; return (h % 12 || 12) + ':' + String(m).padStart(2, '0') + ' ' + s; }
-function cronTeks(c) { const [m, h, dom, , dow] = c.split(' '); const t = jam(+h, +m); if (dom === '*' && dow === '*') return 'Setiap hari, ' + t; if (dow !== '*') return 'Setiap ' + HARI[+dow] + ', ' + t; return dom.split(',').map(d => d + 'hb').join(' & ') + ' setiap bulan, ' + t; }
+function cronTeks(c) { const [m, h, dom, , dow] = c.split(' '); const t = jam(+h, +m); if (dom === '*' && dow === '*') return 'Setiap hari, ' + t; if (dow !== '*') return 'Setiap ' + dow.split(',').map(d => HARI[+d]).join(', ') + ', ' + t; return dom.split(',').map(d => d + 'hb').join(' & ') + ' setiap bulan, ' + t; }
 function seterusnya(c, now = Date.now()) {
   const [m, h, dom, , dow] = c.split(' '); const doms = dom === '*' ? null : dom.split(',').map(Number); const kl = new Date(now + KL);
-  for (let i = 0; i < 70; i++) { const d = new Date(Date.UTC(kl.getUTCFullYear(), kl.getUTCMonth(), kl.getUTCDate() + i, +h, +m)); const ok = (dow === '*' || d.getUTCDay() === +dow) && (!doms || doms.includes(d.getUTCDate())); const t = d.getTime() - KL; if (ok && t > now) return t; }
+  for (let i = 0; i < 70; i++) { const d = new Date(Date.UTC(kl.getUTCFullYear(), kl.getUTCMonth(), kl.getUTCDate() + i, +h, +m)); const ok = (dow === '*' || dow.split(',').map(Number).includes(d.getUTCDay())) && (!doms || doms.includes(d.getUTCDate())); const t = d.getTime() - KL; if (ok && t > now) return t; }
   return null;
 }
 const fmt = new Intl.DateTimeFormat('ms-MY', { timeZone: 'Asia/Kuala_Lumpur', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
@@ -94,7 +95,7 @@ function parseNama(f) {
   const m = /^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})Z__([A-Z]+)__([A-Z]+)/.exec(f.name || '');
   if (!m) return null;
   const t = Date.parse(`${m[1]}T${m[2]}:${m[3]}:${m[4]}Z`);
-  return isNaN(t) ? null : { t, kod: m[5], keadaan: m[6], url: f.html_url || '', nama: f.name };
+  return isNaN(t) ? null : { t, kod: ALIAS_KOD[m[5]] || m[5], keadaan: m[6], url: f.html_url || '', nama: f.name };
 }
 
 // ---------- Adegan 3D ----------
@@ -438,8 +439,8 @@ const DEMO = new URLSearchParams(location.search).has('demo');
 function logDemo() {
   const n = Date.now(), m = 6e4;
   const f = (kod, k, ago) => ({ t: n - ago * m, kod, keadaan: k, url: '', nama: 'demo' });
-  return [f('WEBAPP', 'MULA', 5), f('GAME', 'MULA', 12), f('DESIGNER', 'MULA', 3), f('MOBILE', 'SIAP', 40), f('MOBILE', 'MULA', 70),
-    f('SOKONGAN', 'SIAP', 90), f('SOKONGAN', 'MULA', 95), f('JUALAN', 'GAGAL', 200), f('IDEA', 'MULA', 1), f('PELANCAR', 'SIAP', 30)];
+  return [f('WEBAPP', 'MULA', 5), f('GAME', 'MULA', 12), f('PEMASARAN', 'MULA', 3), f('MOBILE', 'SIAP', 40), f('MOBILE', 'MULA', 70),
+    f('SOKONGAN', 'SIAP', 90), f('SOKONGAN', 'MULA', 95), f('JUALAN', 'GAGAL', 200), f('IDEA', 'MULA', 1), f('KETUASTAF', 'SIAP', 30)];
 }
 async function muatLog() {
   if (DEMO) { LOG = logDemo(); kemasKiniKeadaan(); lukisPanel('Mod demo — data contoh, bukan status sebenar.'); return; }

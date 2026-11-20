@@ -8,14 +8,14 @@ Setiap tugas berjadual ialah satu **pasukan** (atau satu peranan dalam pasukan).
 
 | Bilik | Pasukan (kod label) | Ahli (nama · peranan) | Kod log |
 |---|---|---|---|
-| A | 🧭 **Pejabat CEO** (`pasukan:ceo`) | 👑 Ricky · CEO (manusia) · 🧭 Ketua Staf · Ketua Staf · 🚀 Hana · Pengurus Produk | KETUASTAF, PELANCAR |
+| A | 🧭 **Pejabat CEO** (`pasukan:ceo`) | 👑 Ricky · CEO (manusia) · 🧭 Ketua Staf · Ketua Staf · 🚀 Hana · Pengurus Produk | KETUASTAF |
 | B | 💡 **Makmal Idea** (`pasukan:idea`) | 💡 Idris · Ketua Makmal Idea · 🔭 Siti · Pemburu Trend · 📊 Kumar · Penganalisis Data | IDEA |
-| C | 🎨 **Kreatif & Pemasaran** (`pasukan:kreatif`) | 🎨 Mei Ling · Designer · 📣 Hafiz · Ketua Pemasaran · ✍️ Aina · Penulis Kandungan | DESIGNER, PEMASARAN |
+| C | 🎨 **Kreatif & Pemasaran** (`pasukan:kreatif`) | 🎨 Mei Ling · Designer · 📣 Hafiz · Ketua Pemasaran · ✍️ Aina · Penulis Kandungan | PEMASARAN |
 | D | 🌐 **Pasukan Web App** (`pasukan:webapp`) | 🧑‍💻 Farid · Ketua Teknikal · 🖥️ Nadia · Frontend · 🗄️ Raj · Backend · 🔍 Zul · QA | WEBAPP |
 | E | 🎮 **Studio Game** (`pasukan:game`) | 🎬 Amir · Producer · 🎲 Lina · Game Designer · 🕹️ Daniel · Unity Dev · 🖌️ Yana · Artis | GAME |
 | F | 📱 **Pasukan Mobile App** (`pasukan:mobile`) | 📱 Hakim · Ketua Mobile · ⚛️ Sara · Expo Dev · 🤖 Ben · Android & Widget · 🧪 Ika · QA Mobile | MOBILE |
 | G | 🤝 **Jualan & Sokongan** (`pasukan:jualan`) | 🤝 Rizal · Jualan B2B · 💬 Tini · Sokongan Pelanggan | JUALAN, SOKONGAN |
-| H | 💰 **Kewangan & Pematuhan** (`pasukan:kewangan`) | 💰 Liyana · CFO · ⚖️ Azman · Pematuhan | KEWANGAN, PEMATUHAN |
+| H | 💰 **Kewangan & Pematuhan** (`pasukan:kewangan`) | 💰 Liyana · CFO · ⚖️ Azman · Pematuhan | KEWANGAN |
 | I | 🎖️ **Majlis Senior** (`pasukan:senior`) | 🧠 Dr. Faizal · CTO · 🎯 Puan Rosnah · COO · 📈 Wei Jie · CPO | SENIOR |
 | J | 🗣️ Bilik Mesyuarat | (tiada ahli tetap — pejabat 3D meletakkan ahli thread terbaru di sini) | — |
 
@@ -31,7 +31,15 @@ Setiap tugas berjadual ialah satu **pasukan** (atau satu peranan dalam pasukan).
 - 💰 Kewangan & Pematuhan: lejar hasil/kos, cukai, PDPA, SSM, dasar Play Store
 - 🧭 Pejabat CEO: pilih produk fokus, ringkasan CEO mingguan, susun keputusan untuk CEO
 
-## 1A. Wajib baca sebelum bekerja
+## 1A. Jimat usage (WAJIB, semua pasukan)
+
+Setiap larian menggunakan kuota langganan Claude milik CEO. Bekerja dengan cekap:
+1. **Berhenti awal jika tiada kerja baharu.** Jika tiada input baharu sejak larian lepas (tiada e-mel pelanggan, tiada PR/commit baharu, tiada isu/komen baharu yang berkaitan, tiada sasaran yang boleh digerakkan), jangan cipta laporan panjang: tulis log MULA dan SIAP ("tiada kerja baharu"), satu komen ringkas di Papan Syarikat jika perlu, kemudian tamat.
+2. **Had setiap larian:** maks 2 PR, maks 5 carian web, maks 3 komen di Papan Syarikat, satu Doc laporan ringkas (jadual, bukan esei). Jangan baca semula repo yang tidak berkaitan.
+3. **Jangan ulang kerja pasukan lain** — baca laporan mereka, jangan buat semula.
+4. Clone repo dengan `--depth 1`; baca fail yang perlu sahaja.
+
+## 1B. Wajib baca sebelum bekerja
 
 1. **[MATLAMAT.md](MATLAMAT.md)** — 3 sasaran syarikat suku ini. Setiap idea, PR dan laporan mesti sebut `Sasaran: 1/2/3`.
 2. **Buku Pelajaran** — isu GitHub berlabel `pelajaran` ("📚 Buku Pelajaran Syarikat", isu #2) dan semua komennya: `gh api "repos/ARNA-Tech20/pejabat-syarikat/issues/2/comments?per_page=100"`. Jangan ulang kesilapan yang sudah dicatat.
