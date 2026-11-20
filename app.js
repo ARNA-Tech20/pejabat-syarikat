@@ -12,9 +12,9 @@ const KL = 8 * 3600e3;
 // Senarai ejen dan jadual (waktu Malaysia)
 // Jadual setiap tugas berjadual (kod log -> cron, waktu Malaysia)
 const JADUAL = {
-  KETUASTAF: '10 21 * * 0', IDEA: '45 20 * * 6', PEMASARAN: '10 20 * * 1',
-  WEBAPP: '15 20 * * 4', GAME: '20 20 * * 5', MOBILE: '35 20 * * 3', JUALAN: '25 20 * * 2', SOKONGAN: '5 20 * * 1,3,5',
-  KEWANGAN: '20 20 1 * *', SENIOR: '30 21 * * 6'
+  KETUASTAF: '10 21 * * 0', IDEA: '45 20 * * 6', PEMASARAN: '10 20 * * 1,4',
+  WEBAPP: '15 20 * * 2,5', GAME: '20 20 * * 3,6', MOBILE: '35 20 * * 1,4', JUALAN: '25 20 * * 2', SOKONGAN: '5 20 * * 1,3,5',
+  KEWANGAN: '20 20 1 * *', SENIOR: '30 21 * * 3,6'
 };
 // Pasukan & ahli (mesti sama dengan PERATURAN-SYARIKAT.md dan model Blender)
 const PASUKAN = {
