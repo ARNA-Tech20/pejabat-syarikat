@@ -13,6 +13,8 @@ Setiap pasukan **wajib** membaca fail ini sebelum bekerja. Setiap idea, PR dan l
 
 **Guna kerja sedia ada dulu:** semua sasaran dicapai dengan produk yang sudah ada dalam portfolio CEO (Google Doc peribadi, lihat PERATURAN-SYARIKAT.md bahagian 1B).
 
-**Tidak dibuat suku ini** (supaya fokus): produk baharu yang tiada dalam portfolio, produk baharu saiz L, iklan berbayar, dan pasaran luar negara selain Shift Calendar & CodeReady yang sedia ada.
+**Pasaran terbuka:** produk tidak semestinya bertemakan Malaysia atau berdasarkan sijil/kemahiran CEO. Ikut trend pasaran semasa (global atau tempatan) — pilih yang paling cepat jana duit.
+
+**Tidak dibuat suku ini** (supaya fokus): produk baharu saiz L dan iklan berbayar. Produk baharu saiz S/M yang ikut trend dibenarkan melalui label `perlu-ceo`.
 
 _Majlis Senior menyemak kemajuan sasaran setiap Sabtu. Ketua Staf melaporkannya dalam Ringkasan CEO setiap Ahad._

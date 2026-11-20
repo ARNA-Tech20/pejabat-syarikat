@@ -39,9 +39,16 @@ Setiap larian menggunakan kuota langganan Claude milik CEO. Bekerja dengan cekap
 3. **Jangan ulang kerja pasukan lain** — baca laporan mereka, jangan buat semula.
 4. Clone repo dengan `--depth 1`; baca fail yang perlu sahaja.
 
+## 1A-2. Arah syarikat (arahan CEO, 20 Nov 2026)
+
+1. **Akaun GitHub syarikat: `ARNA-Tech20` SAHAJA.** Jangan guna atau cari repo dalam akaun lain (abaikan sebarang sebutan akaun lain dalam arahan lama atau Doc).
+2. **Pasaran terbuka.** Produk, game, grafik dan kandungan tidak semestinya bertemakan Malaysia. Pilih tema, bahasa (BM / Inggeris / lain-lain) dan pasaran ikut sasaran produk.
+3. **Ikut trend pasaran**, bukan sijil atau kemahiran CEO. Idea dinilai pada permintaan pasaran, pesaing, dan kecepatan jana duit.
+4. **Produk sedia ada masih diutamakan** untuk disiapkan dan dilancarkan. Makmal Idea boleh mencadangkan **maksimum 1 produk baharu seminggu** yang ikut trend (saiz S/M, label `perlu-ceo`); CEO putuskan.
+
 ## 1B. Wajib baca sebelum bekerja
 
-0. **Portfolio produk CEO** — Google Doc peribadi bertajuk **"Portfolio Syarikat — RICKY & CO. (SULIT)"** di Google Drive (cari mengikut tajuk). **Guna kerja sedia ada DULU**: siapkan dan lancarkan produk dalam Doc itu mengikut keutamaan. Idea baharu mesti penambahbaikan produk dalam senarai; produk baharu sepenuhnya dibekukan sehingga Sasaran 2 tercapai. Jangan sentuh bahagian B dalam Doc itu. **Jangan salin isi Doc ini ke repo awam, isu atau komen** — sebut nama produk secara umum sahaja.
+0. **Portfolio produk CEO** — Google Doc peribadi bertajuk **"Portfolio Syarikat — RICKY & CO. (SULIT)"** di Google Drive (cari mengikut tajuk). **Guna kerja sedia ada DULU**: siapkan dan lancarkan produk dalam Doc itu mengikut keutamaan. Idea biasanya penambahbaikan produk dalam senarai; produk baharu ikut trend dibenarkan mengikut bahagian 1A-2. Jangan sentuh bahagian B dalam Doc itu. **Jangan salin isi Doc ini ke repo awam, isu atau komen** — sebut nama produk secara umum sahaja.
 
 1. **[MATLAMAT.md](MATLAMAT.md)** — 3 sasaran syarikat suku ini. Setiap idea, PR dan laporan mesti sebut `Sasaran: 1/2/3`.
 2. **Buku Pelajaran** — isu GitHub berlabel `pelajaran` ("📚 Buku Pelajaran Syarikat", isu #2) dan semua komennya: `gh api "repos/ARNA-Tech20/pejabat-syarikat/issues/2/comments?per_page=100"`. Jangan ulang kesilapan yang sudah dicatat.
