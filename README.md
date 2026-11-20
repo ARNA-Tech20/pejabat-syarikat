@@ -35,5 +35,15 @@ log/2026-11-20T12-18-42Z__SOKONGAN__SIAP.md
 ## Fail
 
 - `index.html` — halaman dan paparan panel
-- `app.js` — adegan 3D (Three.js), watak, animasi dan bacaan log
+- `app.js` — adegan 3D (Three.js), animasi watak, label dan bacaan log
+- `models/office.glb` — bangunan, bilik, perabot dan landskap (dibina dalam **Blender**)
+- `models/person.glb` — watak ejen (Blender; baju & rambut diwarnakan dalam app.js)
+- `blender/bina_pejabat.py` — skrip Blender yang menjana kedua-dua model
 - `log/` — fail status daripada ejen
+
+### Bina semula model dengan Blender
+
+```bash
+pip install bpy            # atau: blender --background --python blender/bina_pejabat.py -- models
+python3 blender/bina_pejabat.py -- models
+```

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // ---------- Tetapan ----------
 const REPO = 'ARNA-Tech20/pejabat-syarikat';
@@ -25,16 +25,12 @@ const ROSTER = [
 ];
 const CEO = { kod: 'CEO', nama: 'Ricky (CEO)', peranan: 'Ketua Pegawai Eksekutif', emoji: '👑', bilik: 'A', baju: '#1f2a44', rambut: '#111111', ceo: true };
 
-// Bilik: pusat (x,z), saiz 9 x 8
+// Bilik (mesti sama dengan model Blender models/office.glb)
 const BILIK = {
-  A: { x: -10, z: -6.5, n: 'PEJABAT CEO', lantai: '#d9c7a3' },
-  B: { x: 0, z: -6.5, n: 'PRODUK & R&D', lantai: '#cfd8c3' },
-  C: { x: 10, z: -6.5, n: 'STUDIO KREATIF', lantai: '#e8cfd9' },
-  D: { x: -10, z: 6.5, n: 'MAKMAL TEKNOLOGI', lantai: '#c9d3e6' },
-  E: { x: 0, z: 6.5, n: 'JUALAN & SOKONGAN', lantai: '#d3e6d6' },
-  F: { x: 10, z: 6.5, n: 'KEWANGAN & PEMATUHAN', lantai: '#e6dcc3' }
+  A: { x: -12.5, z: -7.5, n: 'PEJABAT CEO' }, B: { x: 0, z: -7.5, n: 'PRODUK & R&D' }, C: { x: 12.5, z: -7.5, n: 'STUDIO KREATIF' },
+  D: { x: -12.5, z: 7.5, n: 'MAKMAL TEKNOLOGI' }, E: { x: 0, z: 7.5, n: 'JUALAN & SOKONGAN' }, F: { x: 12.5, z: 7.5, n: 'KEWANGAN & PEMATUHAN' }
 };
-const RW = 9, RD = 8;
+const RW = 12, RD = 11, LANTAI = 0.3;
 const PANTRI = { x: 0, z: 0 };
 
 // ---------- Utiliti masa & status ----------
@@ -72,177 +68,155 @@ function parseNama(f) {
 
 // ---------- Adegan 3D ----------
 const host = document.getElementById('scene');
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 host.appendChild(renderer.domElement);
 
-const labelRenderer = new CSS2DRenderer();
-labelRenderer.domElement.style.position = 'absolute';
-labelRenderer.domElement.style.inset = '0';
-labelRenderer.domElement.style.pointerEvents = 'none';
-document.getElementById('labels').appendChild(labelRenderer.domElement);
-
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('#1b1530');
-scene.fog = new THREE.Fog('#1b1530', 60, 120);
+scene.background = new THREE.Color('#bfe3f7');
+scene.fog = new THREE.Fog('#bfe3f7', 70, 140);
 
-const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 300);
-camera.position.set(22, 26, 30);
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 400);
+camera.position.set(26, 30, 36);
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 0, 0);
+window.__pk = { camera, controls };
+controls.target.set(0, 0.5, 1);
 controls.enableDamping = true;
-controls.maxPolarAngle = Math.PI * 0.45;
-controls.minDistance = 12;
-controls.maxDistance = 110;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI * 0.44;
+controls.minDistance = 10;
+controls.maxDistance = 120;
 
-const hemi = new THREE.HemisphereLight('#fff6e8', '#3a2f55', 0.9);
+const hemi = new THREE.HemisphereLight('#e8f4ff', '#8a7a5a', 1.1);
 scene.add(hemi);
-const sun = new THREE.DirectionalLight('#fff1d6', 1.4);
-sun.position.set(18, 30, 12);
+const sun = new THREE.DirectionalLight('#fff2d9', 2.2);
+sun.position.set(22, 38, 16);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 90 });
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.02;
+Object.assign(sun.shadow.camera, { left: -30, right: 30, top: 26, bottom: -26, near: 1, far: 110 });
 scene.add(sun);
+const isi = new THREE.DirectionalLight('#c9dcff', 0.5);
+isi.position.set(-20, 18, -10);
+scene.add(isi);
 
-const matCache = {};
-const mat = (c, extra = {}) => { const k = c + JSON.stringify(extra); return matCache[k] || (matCache[k] = new THREE.MeshStandardMaterial({ color: c, roughness: 0.8, ...extra })); };
-function box(w, h, d, m, x = 0, y = 0, z = 0, parent = scene) {
-  const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
-  o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; parent.add(o); return o;
+// ---------- Label sprite (tajam, tidak bergetar) ----------
+function teksSprite(teks, { saiz = 34, warna = '#ffffff', latar = 'rgba(30,24,48,0.82)', tinggi = 0.42, tebal = 600 } = {}) {
+  const c = document.createElement('canvas'); const g = c.getContext('2d');
+  const font = `${tebal} ${saiz}px system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+  g.font = font; const w = Math.ceil(g.measureText(teks).width) + saiz * 1.1; const h = Math.ceil(saiz * 1.6);
+  c.width = w * 2; c.height = h * 2; g.scale(2, 2); g.font = font;
+  if (latar) { g.fillStyle = latar; const r = h / 2; g.beginPath(); g.roundRect(0, 0, w, h, r); g.fill(); }
+  g.fillStyle = warna; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(teks, w / 2, h / 2 + 1);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  sp.scale.set(tinggi * w / h, tinggi, 1); sp.renderOrder = 10;
+  return sp;
 }
-function label(html, cls, x, y, z, parent = scene) {
-  const d = document.createElement('div'); d.className = cls; d.textContent = html;
-  const o = new CSS2DObject(d); o.position.set(x, y, z); parent.add(o); return d;
+function gelembung() {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  sp.scale.set(0.62, 0.62, 1); sp.renderOrder = 11;
+  sp.userData.set = (ikon) => {
+    if (sp.userData.ikon === ikon) return; sp.userData.ikon = ikon;
+    const g = c.getContext('2d'); g.clearRect(0, 0, 128, 128);
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(64, 58, 52, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.moveTo(52, 104); g.lineTo(64, 124); g.lineTo(76, 104); g.fill();
+    g.font = '60px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(ikon, 64, 62); tex.needsUpdate = true;
+  };
+  return sp;
 }
 
-// Lantai luar & koridor
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 30), mat('#8a7a63'));
-ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
-const tapak = box(40.6, 0.4, 30.6, mat('#3b3152'), 0, -0.21, 0);
-tapak.castShadow = false;
-
-// Bilik
-const wallM = mat('#f2ece0');
-const trimM = mat('#4b3f5e');
-for (const k in BILIK) {
-  const b = BILIK[k];
-  const fl = new THREE.Mesh(new THREE.PlaneGeometry(RW, RD), mat(b.lantai));
-  fl.rotation.x = -Math.PI / 2; fl.position.set(b.x, 0.01, b.z); fl.receiveShadow = true; scene.add(fl);
-  const H = 1.1, T = 0.2;
-  const luar = b.z < 0 ? b.z - RD / 2 : b.z + RD / 2;      // dinding luar (jauh dari koridor)
-  const dalam = b.z < 0 ? b.z + RD / 2 : b.z - RD / 2;     // dinding koridor (ada pintu)
-  const tinggi = b.z < 0 ? H * 2.2 : H;   // dinding belakang tinggi, dinding depan rendah supaya nampak ke dalam
-  box(RW, tinggi, T, wallM, b.x, tinggi / 2, luar);
-  box(RW, 0.08, T + 0.04, trimM, b.x, tinggi, luar);
-  box(T, H, RD, wallM, b.x - RW / 2, H / 2, b.z);
-  box(T, H, RD, wallM, b.x + RW / 2, H / 2, b.z);
-  const gap = 2.2, seg = (RW - gap) / 2;
-  box(seg, H, T, wallM, b.x - gap / 2 - seg / 2, H / 2, dalam);
-  box(seg, H, T, wallM, b.x + gap / 2 + seg / 2, H / 2, dalam);
-  // tingkap pada dinding luar
-  if (b.z < 0) for (const dx of [-2.6, 2.6]) {
-    box(2, 0.9, 0.05, mat('#9fd8ff', { emissive: '#2a5d7a', emissiveIntensity: 0.4, roughness: 0.2 }), b.x + dx, 1.6, luar + (b.z < 0 ? 0.13 : -0.13));
+// ---------- Muat model Blender ----------
+let AGEN = [];
+const pintu = k => { const b = BILIK[k]; return b.z < 0 ? b.z + RD / 2 : b.z - RD / 2; };
+async function muatModel() {
+  const status = document.getElementById('memuat');
+  const loader = new GLTFLoader();
+  const [office, person] = await Promise.all([loader.loadAsync('./models/office.glb'), loader.loadAsync('./models/person.glb')]);
+  office.scene.traverse(o => {
+    if (o.isMesh) {
+      o.castShadow = true; o.receiveShadow = true;
+      const m = o.material;
+      if (m && m.transparent) { o.castShadow = false; m.depthWrite = false; }
+    }
+  });
+  scene.add(office.scene);
+  // Label bilik
+  for (const k in BILIK) {
+    const e = office.scene.getObjectByName('Label_' + k); if (!e) continue;
+    const sp = teksSprite(BILIK[k].n, { saiz: 30, latar: 'rgba(47,62,92,0.88)', tinggi: 0.55 });
+    sp.position.copy(e.getWorldPosition(new THREE.Vector3())).add(new THREE.Vector3(0, 0.5, 0)); scene.add(sp);
   }
-  label(b.n, 'room', b.x, b.z < 0 ? 2.9 : 1.6, luar);
-  // pokok
-  const px = b.x + RW / 2 - 0.8, pz = luar + (b.z < 0 ? 0.8 : -0.8);
-  const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.22, 0.45, 12), mat('#9b5a2f'));
-  pot.position.set(px, 0.23, pz); pot.castShadow = true; scene.add(pot);
-  const daun = new THREE.Mesh(new THREE.IcosahedronGeometry(0.5, 0), mat('#3f9b4a', { flatShading: true }));
-  daun.position.set(px, 0.85, pz); daun.castShadow = true; scene.add(daun);
+  const templat = person.scene.getObjectByName('Person') || person.scene;
+  const SEMUA = [CEO, ...ROSTER];
+  AGEN = SEMUA.map(a => {
+    const seatE = office.scene.getObjectByName('Seat_' + a.kod);
+    const kerusi = seatE ? seatE.getWorldPosition(new THREE.Vector3()) : new THREE.Vector3(BILIK[a.bilik].x, LANTAI, BILIK[a.bilik].z);
+    kerusi.y = LANTAI;
+    const skrin = office.scene.getObjectByName('Screen_' + a.kod);
+    if (skrin) { skrin.material = skrin.material.clone(); skrin.material.emissive = new THREE.Color('#000'); }
+    const g = templat.clone(true);
+    const baju = new THREE.MeshStandardMaterial({ color: a.baju, roughness: 0.8 });
+    const rambut = new THREE.MeshStandardMaterial({ color: a.rambut, roughness: 0.9 });
+    g.traverse(o => {
+      if (!o.isMesh) return;
+      o.castShadow = true; o.receiveShadow = false;
+      if (o.material.name === 'Baju') o.material = baju;
+      else if (o.material.name === 'Rambut') o.material = rambut;
+      o.userData.kod = a.kod;
+    });
+    const mahkota = g.getObjectByName('Crown'); if (mahkota) mahkota.visible = !!a.ceo;
+    const badan = new THREE.Group(); badan.add(g); badan.position.copy(kerusi); scene.add(badan);
+    const label = teksSprite(a.emoji + ' ' + a.nama, { saiz: 30, tinggi: 0.38 }); label.position.set(0, 2.55, 0); badan.add(label);
+    const bub = gelembung(); bub.position.set(0, 3.15, 0); bub.visible = false; badan.add(bub);
+    badan.traverse(o => { o.userData.kod = a.kod; });
+    return {
+      a, badan, g, skrin, kerusi, bub, label,
+      kaki: [g.getObjectByName('LegL'), g.getObjectByName('LegR')],
+      tangan: [g.getObjectByName('ArmL'), g.getObjectByName('ArmR')],
+      kepala: g.getObjectByName('HeadPivot'),
+      jalan: [], k: 'rehat', tunggu: performance.now() + 1500 + Math.random() * 6000, fasa: Math.random() * 10
+    };
+  });
+  if (status) status.remove();
 }
-
-// Pantri di tengah koridor
-box(4, 0.9, 1, mat('#6b4f3a'), PANTRI.x, 0.45, PANTRI.z - 0.2);
-box(4.1, 0.08, 1.1, mat('#e8e2d6'), PANTRI.x, 0.94, PANTRI.z - 0.2);
-box(0.5, 0.7, 0.45, mat('#2b2b2b'), PANTRI.x - 1.4, 1.33, PANTRI.z - 0.25);
-box(0.15, 0.08, 0.05, mat('#ff4444', { emissive: '#ff2222', emissiveIntensity: 1 }), PANTRI.x - 1.4, 1.5, PANTRI.z);
-box(0.35, 0.25, 0.35, mat('#ffffff'), PANTRI.x + 1.2, 1.1, PANTRI.z - 0.2);
-box(2.4, 0.4, 0.9, mat('#c0504d'), PANTRI.x + 6, 0.3, PANTRI.z + 0.6);
-box(2.4, 0.6, 0.25, mat('#a8403d'), PANTRI.x + 6, 0.7, PANTRI.z + 1.0);
-box(2.4, 0.4, 0.9, mat('#4d79c0'), PANTRI.x - 6, 0.3, PANTRI.z + 0.6);
-box(2.4, 0.6, 0.25, mat('#3d63a8'), PANTRI.x - 6, 0.7, PANTRI.z + 1.0);
-label('☕ PANTRI', 'room', PANTRI.x, 1.9, PANTRI.z - 0.2);
-
-// ---------- Watak voxel ----------
-function buatOrang(a) {
-  const g = new THREE.Group();
-  const skin = mat('#f1c27d'), seluar = mat('#3a3f5c'), kasut = mat('#1b1b1b');
-  const badan = box(0.62, 0.72, 0.36, mat(a.baju), 0, 1.06, 0, g);
-  const kepala = box(0.46, 0.46, 0.46, skin, 0, 1.66, 0, g);
-  box(0.5, 0.16, 0.5, mat(a.rambut), 0, 1.93, -0.01, g);
-  box(0.5, 0.22, 0.12, mat(a.rambut), 0, 1.78, -0.2, g);
-  box(0.07, 0.07, 0.02, mat('#111'), -0.1, 1.68, 0.235, g);
-  box(0.07, 0.07, 0.02, mat('#111'), 0.1, 1.68, 0.235, g);
-  if (a.ceo) { box(0.34, 0.12, 0.34, mat('#f5c542', { metalness: 0.6, roughness: 0.3 }), 0, 2.08, 0, g); box(0.62, 0.1, 0.37, mat('#c0392b'), 0, 1.25, 0.005, g); }
-  const kaki = [-0.15, 0.15].map(x => { const p = new THREE.Group(); p.position.set(x, 0.7, 0); g.add(p); box(0.24, 0.66, 0.28, seluar, 0, -0.33, 0, p); box(0.26, 0.08, 0.34, kasut, 0, -0.66, 0.03, p); return p; });
-  const tangan = [-0.42, 0.42].map(x => { const p = new THREE.Group(); p.position.set(x, 1.38, 0); g.add(p); box(0.18, 0.58, 0.2, mat(a.baju), 0, -0.27, 0, p); box(0.16, 0.12, 0.16, skin, 0, -0.6, 0, p); return p; });
-  g.traverse(o => { o.userData.kod = a.kod; });
-  // label & gelembung
-  const wrap = document.createElement('div'); wrap.className = 'lbl';
-  const bub = document.createElement('div'); bub.className = 'bub hide';
-  const nm = document.createElement('div'); nm.textContent = a.emoji + ' ' + a.nama;
-  wrap.append(bub, nm);
-  const lo = new CSS2DObject(wrap); lo.position.set(0, 2.45, 0); g.add(lo);
-  return { g, kaki, tangan, badan, kepala, bub };
-}
-
-function buatMeja(x, z, ceo) {
-  const kayu = mat(ceo ? '#6b3e1f' : '#9b6b43');
-  box(1.6, 0.08, 0.8, kayu, x, 0.78, z);
-  for (const [dx, dz] of [[-0.72, -0.32], [0.72, -0.32], [-0.72, 0.32], [0.72, 0.32]]) box(0.07, 0.78, 0.07, mat('#3b2a1a'), x + dx, 0.39, z + dz);
-  box(0.7, 0.45, 0.05, mat('#1d1d1d'), x, 1.15, z + 0.2);
-  const skrin = box(0.62, 0.37, 0.02, mat('#2a3550', { emissive: '#000000' }).clone(), x, 1.15, z + 0.17);
-  box(0.08, 0.2, 0.08, mat('#1d1d1d'), x, 0.9, z + 0.22);
-  box(0.5, 0.03, 0.18, mat('#333'), x, 0.83, z - 0.15);
-  // kerusi
-  box(0.6, 0.08, 0.6, mat('#2c3e50'), x, 0.48, z - 0.95);
-  box(0.6, 0.6, 0.08, mat('#2c3e50'), x, 0.8, z - 1.25);
-  box(0.08, 0.44, 0.08, mat('#555'), x, 0.24, z - 0.95);
-  return skrin;
-}
-
-const SEMUA = [CEO, ...ROSTER];
-const kira = {};
-const AGEN = SEMUA.map(a => {
-  const b = BILIK[a.bilik]; const i = kira[a.bilik] = (kira[a.bilik] || 0) + 1;
-  const dx = b.x + (i === 1 ? -2.2 : 2.2), dz = b.z + 0.3;
-  const skrin = buatMeja(dx, dz, a.ceo);
-  const o = buatOrang(a);
-  const kerusi = new THREE.Vector3(dx, 0, dz - 0.95);
-  o.g.position.copy(kerusi);
-  scene.add(o.g);
-  return { a, ...o, skrin, kerusi, sasaran: kerusi.clone(), duduk: true, k: 'rehat', tunggu: performance.now() + 1500 + Math.random() * 5000, fasa: Math.random() * 10 };
-});
 
 // ---------- Logik gerak ----------
 const gerak = !matchMedia('(prefers-reduced-motion: reduce)').matches;
-function pilihSasaran(o) {
-  const b = BILIK[o.a.bilik]; const r = Math.random();
-  if (r < 0.33) return new THREE.Vector3(PANTRI.x + (Math.random() * 3 - 1.5), 0, PANTRI.z + 0.7 + Math.random() * 0.6);
-  if (r < 0.66) return o.kerusi.clone();
-  return new THREE.Vector3(b.x + (Math.random() * 6 - 3), 0, b.z + (b.z < 0 ? 1.8 : -1.8) + Math.random() * 1.2 - 0.6);
-}
-// laluan: keluar ikut pintu bilik bila bertukar antara bilik dan koridor
+const V = (x, z) => new THREE.Vector3(x, LANTAI, z);
+function dalamBilik(o, p) { const b = BILIK[o.a.bilik]; return Math.abs(p.x - b.x) < RW / 2 - 0.3 && Math.abs(p.z - b.z) < RD / 2 - 0.2; }
 function laluan(o, dest) {
-  const b = BILIK[o.a.bilik]; const pintu = new THREE.Vector3(b.x, 0, b.z < 0 ? b.z + RD / 2 : b.z - RD / 2);
-  const dalamBilik = p => Math.abs(p.z - b.z) < RD / 2 - 0.2 && Math.abs(p.x - b.x) < RW / 2;
-  const kini = o.g.position;
-  if (dalamBilik(kini) !== dalamBilik(dest)) return [pintu.clone(), dest];
+  const b = BILIK[o.a.bilik]; const zc = pintu(o.a.bilik); const arah = b.z < 0 ? 1 : -1;
+  const kini = o.badan.position; const dIn = V(b.x, zc - arah * 0.8), dOut = V(b.x, zc + arah * 0.9);
+  const aisle = z => V(b.x, z);
+  const a = dalamBilik(o, kini), c = dalamBilik(o, dest);
+  if (a && c) return [aisle(kini.z), aisle(dest.z), dest];
+  if (a && !c) return [aisle(kini.z), dIn, dOut, dest];
+  if (!a && c) return [dOut, dIn, aisle(dest.z), dest];
   return [dest];
+}
+function pilihSasaran(o) {
+  const b = BILIK[o.a.bilik]; const r = Math.random(); const arah = b.z < 0 ? 1 : -1;
+  if (r < 0.35) return V(PANTRI.x + (Math.random() * 4 - 2), PANTRI.z - 0.15 + Math.random() * 0.2);
+  if (r < 0.65) return o.kerusi.clone();
+  return V(b.x + (Math.random() * 2.4 - 1.2), b.z + arah * (2.2 + Math.random() * 1.6));
 }
 
 function kemasKiniKeadaan() {
   for (const o of AGEN) {
-    const k = keadaan(o.a.kod); o.k = k;
-    const on = k === 'kerja';
-    o.skrin.material.emissive.set(on ? '#5fe1ff' : '#000000');
-    o.skrin.material.emissiveIntensity = on ? 1.2 : 0;
-    o.bub.textContent = IKON[k];
-    o.bub.classList.toggle('hide', k === 'rehat');
-    if (k !== 'rehat') { o.jalan = laluan(o, o.kerusi.clone()); }
+    const k = keadaan(o.a.kod); const lama = o.k; o.k = k;
+    if (o.skrin) { const on = k === 'kerja'; o.skrin.material.emissive.set(on ? '#6fe3ff' : '#000000'); o.skrin.material.emissiveIntensity = on ? 1.6 : 0; }
+    o.bub.userData.set(IKON[k]); o.bub.visible = k !== 'rehat';
+    if (k !== 'rehat' && (lama === 'rehat' || !o.jalan.length) && o.badan.position.distanceTo(o.kerusi) > 0.05) o.jalan = laluan(o, o.kerusi.clone());
   }
 }
 
@@ -250,58 +224,64 @@ const clock = new THREE.Clock();
 function tick() {
   const dt = Math.min(clock.getDelta(), 0.1); const now = performance.now(); const t = now / 1000;
   for (const o of AGEN) {
-    if (gerak && o.k === 'rehat' && now > o.tunggu && (!o.jalan || !o.jalan.length)) { o.jalan = laluan(o, pilihSasaran(o)); o.tunggu = now + 6000 + Math.random() * 9000; }
-    const p = o.g.position;
-    let berjalan = false;
-    if (o.jalan && o.jalan.length) {
-      const s = o.jalan[0]; const d = s.clone().sub(p); d.y = 0; const dist = d.length(); const v = 1.6 * dt;
-      if (!gerak) { p.copy(o.jalan[o.jalan.length - 1]); o.jalan = []; }
-      else if (dist > v) { d.normalize(); p.addScaledVector(d, v); o.g.rotation.y = Math.atan2(d.x, d.z); berjalan = true; }
-      else { p.copy(s); o.jalan.shift(); }
+    if (gerak && o.k === 'rehat' && now > o.tunggu && !o.jalan.length) { o.jalan = laluan(o, pilihSasaran(o)); o.tunggu = now + 7000 + Math.random() * 10000; }
+    const p = o.badan.position; let berjalan = false;
+    if (o.jalan.length) {
+      const s = o.jalan[0]; const d = new THREE.Vector3(s.x - p.x, 0, s.z - p.z); const dist = d.length(); const v = 1.5 * dt;
+      if (!gerak) { const last = o.jalan[o.jalan.length - 1]; p.x = last.x; p.z = last.z; o.jalan = []; }
+      else if (dist > v) { d.normalize(); p.x += d.x * v; p.z += d.z * v; const sasar = Math.atan2(d.x, d.z); o.g.rotation.y += (((sasar - o.g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * Math.min(1, dt * 10); berjalan = true; }
+      else { p.x = s.x; p.z = s.z; o.jalan.shift(); }
     }
-    const diKerusi = p.distanceTo(o.kerusi) < 0.05;
-    if (diKerusi && !berjalan) o.g.rotation.y = 0;
-    const f = t * 9 + o.fasa;
+    const diKerusi = Math.hypot(p.x - o.kerusi.x, p.z - o.kerusi.z) < 0.05;
+    const f = t * 8 + o.fasa; const [kl, kr] = o.kaki, [tl, tr] = o.tangan;
     if (berjalan) {
-      o.g.position.y = 0;
-      o.kaki[0].rotation.x = Math.sin(f) * 0.6; o.kaki[1].rotation.x = -Math.sin(f) * 0.6;
-      o.tangan[0].rotation.x = -Math.sin(f) * 0.5; o.tangan[1].rotation.x = Math.sin(f) * 0.5;
+      o.g.position.y = Math.abs(Math.sin(f)) * 0.04;
+      if (kl) { kl.rotation.x = Math.sin(f) * 0.55; kr.rotation.x = -Math.sin(f) * 0.55; }
+      if (tl) { tl.rotation.x = -Math.sin(f) * 0.45; tr.rotation.x = Math.sin(f) * 0.45; }
+      if (o.kepala) o.kepala.rotation.x = 0;
     } else if (diKerusi) {
-      o.g.position.y = -0.28;
-      o.kaki[0].rotation.x = o.kaki[1].rotation.x = -1.45;
-      if (o.k === 'kerja' && gerak) { o.tangan[0].rotation.x = -1.1 + Math.sin(t * 22) * 0.12; o.tangan[1].rotation.x = -1.1 + Math.cos(t * 22) * 0.12; o.kepala.rotation.x = 0.1; }
-      else if (o.k === 'tidur') { o.tangan[0].rotation.x = o.tangan[1].rotation.x = -0.3; o.kepala.rotation.x = 0.35 + (gerak ? Math.sin(t * 1.5) * 0.05 : 0); }
-      else { o.tangan[0].rotation.x = o.tangan[1].rotation.x = -0.4; o.kepala.rotation.x = 0; }
+      o.g.rotation.y += (0 - o.g.rotation.y) * Math.min(1, dt * 8);
+      o.g.position.y = -0.24;
+      if (kl) kl.rotation.x = kr.rotation.x = -1.5;
+      if (o.k === 'kerja' && gerak) {
+        tl.rotation.x = -1.15 + Math.sin(t * 20) * 0.1; tr.rotation.x = -1.15 + Math.cos(t * 21) * 0.1;
+        if (o.kepala) o.kepala.rotation.x = 0.12 + Math.sin(t * 1.3) * 0.03;
+      } else if (o.k === 'tidur') {
+        tl.rotation.x = tr.rotation.x = -0.9; if (o.kepala) o.kepala.rotation.x = 0.45 + (gerak ? Math.sin(t * 1.2) * 0.05 : 0);
+      } else { tl.rotation.x = tr.rotation.x = -0.5; if (o.kepala) o.kepala.rotation.x = 0; }
     } else {
       o.g.position.y = 0;
-      o.kaki[0].rotation.x = o.kaki[1].rotation.x = 0;
-      o.tangan[0].rotation.x = gerak ? Math.sin(t * 2 + o.fasa) * 0.08 : 0; o.tangan[1].rotation.x = -0.9; // pegang kopi
-      o.kepala.rotation.x = 0;
+      if (kl) kl.rotation.x = kr.rotation.x = 0;
+      if (tl) { tl.rotation.x = gerak ? Math.sin(t * 1.5 + o.fasa) * 0.06 : 0; tr.rotation.x = -1.0; }
+      if (o.kepala) o.kepala.rotation.x = gerak ? Math.sin(t * 0.8 + o.fasa) * 0.08 : 0;
     }
-    if (o.k === 'rehat') o.bub.classList.toggle('hide', !(Math.abs(p.z - PANTRI.z) < 1.6 && Math.abs(p.x - PANTRI.x) < 2.2));
+    if (o.k === 'rehat') o.bub.visible = !o.jalan.length && Math.abs(p.z - PANTRI.z) < 1.2 && Math.abs(p.x - PANTRI.x) < 2.6;
+    if (o.bub.visible && gerak) o.bub.position.y = 3.15 + Math.sin(t * 2 + o.fasa) * 0.05;
   }
   controls.update();
   renderer.render(scene, camera);
-  labelRenderer.render(scene, camera);
   requestAnimationFrame(tick);
 }
 
 // Siang / malam ikut waktu Malaysia
 function cahaya() {
   const m = malam();
-  scene.background.set(m ? '#0e0b1c' : '#1b1530');
-  scene.fog.color.set(m ? '#0e0b1c' : '#1b1530');
-  hemi.intensity = m ? 0.45 : 0.9;
-  sun.intensity = m ? 0.35 : 1.4;
-  sun.color.set(m ? '#9fb4ff' : '#fff1d6');
+  scene.background.set(m ? '#101630' : '#bfe3f7');
+  scene.fog.color.set(m ? '#101630' : '#bfe3f7');
+  hemi.intensity = m ? 0.35 : 1.1;
+  hemi.color.set(m ? '#7d8fd6' : '#e8f4ff');
+  sun.intensity = m ? 0.45 : 2.2;
+  sun.color.set(m ? '#a9b9ff' : '#fff2d9');
+  isi.intensity = m ? 0.25 : 0.5;
+  renderer.toneMappingExposure = m ? 1.25 : 1.05;
 }
 
 function saiz() {
   const w = innerWidth, h = innerHeight;
-  renderer.setSize(w, h); labelRenderer.setSize(w, h);
+  renderer.setSize(w, h);
   camera.aspect = w / h;
   const asp = w / h;
-  camera.position.setLength(asp >= 1.25 ? 44 : Math.min(70, 44 * 0.72 / asp));
+  camera.position.setLength(asp >= 1.25 ? 54 : Math.min(95, 54 * 0.7 / asp));
   camera.updateProjectionMatrix();
 }
 addEventListener('resize', saiz);
@@ -315,8 +295,8 @@ renderer.domElement.addEventListener('pointerup', e => {
   const r = renderer.domElement.getBoundingClientRect();
   ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ptr, camera);
-  const hit = ray.intersectObjects(AGEN.map(o => o.g), true)[0];
-  if (hit) { pilihan = hit.object.userData.kod; lukisButiran(); document.getElementById('side').classList.add('open'); }
+  const hit = ray.intersectObjects(AGEN.map(o => o.badan), true)[0];
+  if (hit && hit.object.userData.kod) { pilihan = hit.object.userData.kod; lukisButiran(); document.getElementById('side').classList.add('open'); }
 });
 document.getElementById('toggle').addEventListener('click', () => document.getElementById('side').classList.toggle('open'));
 
@@ -384,7 +364,9 @@ function jamHud() {
   document.getElementById('clock').textContent = new Intl.DateTimeFormat('ms-MY', { timeZone: 'Asia/Kuala_Lumpur', weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date()) + ' (waktu Malaysia)';
 }
 
-saiz(); cahaya(); kemasKiniKeadaan(); lukisPanel(); jamHud();
+saiz(); cahaya(); lukisPanel(); jamHud();
+await muatModel();
+kemasKiniKeadaan();
 muatLog();
 setInterval(muatLog, REFRESH_MS);
 setInterval(() => { jamHud(); cahaya(); }, 1000);
