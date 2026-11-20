@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pejabat Syarikat Ricky — 3D</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>">
+<style>
+  :root{--bg:#141020;--panel:rgba(24,20,38,.86);--line:rgba(255,255,255,.12);--fg:#f4efe6;--muted:#b9b0c9;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24;--accent:#7dd3fc}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+  #scene{position:fixed;inset:0}
+  #labels{position:fixed;inset:0;pointer-events:none}
+  .hud{position:fixed;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  #top{left:12px;top:12px;padding:12px 14px;max-width:min(440px,calc(100vw - 24px))}
+  #top h1{margin:0;font-size:18px;letter-spacing:.3px}
+  #top .sub{color:var(--muted);font-size:12px;margin-top:2px}
+  #clock{font-variant-numeric:tabular-nums;color:var(--accent);font-size:13px;margin-top:6px}
+  .tiles{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .tile{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;padding:6px 10px;min-width:84px}
+  .tile b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+  .tile span{font-size:11px;color:var(--muted)}
+  #side{right:12px;top:12px;width:min(320px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto;padding:12px 14px}
+  #side h2{font-size:14px;margin:0 0 8px}
+  #side section+section{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .det .r{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0}
+  .det .r span{color:var(--muted)}
+  .det .nm{font-weight:600;margin-bottom:6px}
+  .feed{list-style:none;margin:0;padding:0;font-size:12px;display:flex;flex-direction:column;gap:6px}
+  .feed time{color:var(--muted);display:inline-block;min-width:92px;font-variant-numeric:tabular-nums}
+  .tag{padding:1px 7px;border-radius:999px;border:1px solid var(--line);font-size:11px;white-space:nowrap}
+  .tag.MULA{border-color:var(--ok);color:var(--ok)}
+  .tag.GAGAL{border-color:var(--bad);color:var(--bad)}
+  .tag.SIAP{border-color:var(--accent);color:var(--accent)}
+  #legend{left:12px;bottom:12px;padding:8px 12px;font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;max-width:calc(100vw - 24px)}
+  #toggle{display:none}
+  .lbl{font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 2px #000,0 0 4px #000;white-space:nowrap;transform:translateY(-6px);text-align:center}
+  .bub{display:inline-block;background:#fff;color:#111;border-radius:10px;padding:1px 6px;font-size:14px;margin-bottom:2px;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  .bub.hide{visibility:hidden}
+  .room{font-size:12px;font-weight:700;color:#f5e9c9;letter-spacing:.5px;text-shadow:0 1px 3px #000;background:rgba(40,30,60,.65);padding:2px 8px;border-radius:6px}
+  .err{color:var(--bad);font-size:12px}
+  .muted{color:var(--muted);font-size:12px}
+  a{color:var(--accent)}
+  @media (max-width:760px){
+    #side{top:auto;bottom:56px;max-height:42vh;display:none}
+    #side.open{display:block}
+    #toggle{display:block;position:fixed;right:12px;bottom:12px;z-index:6;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13px}
+    #legend{bottom:12px;right:120px;font-size:11px;gap:8px}
+    #top h1{font-size:16px}
+    #top .sub{display:none}
+    #top{padding:10px 12px}
+    .tile{padding:4px 8px;min-width:0;flex:1}
+    .tile b{font-size:16px}
+  }
+  @media (prefers-reduced-motion: reduce){ .bub{transition:none} }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+  <div id="scene" aria-label="Pejabat 3D syarikat Ricky dengan 11 ejen AI" role="img"></div>
+  <div id="labels"></div>
+
+  <div id="top" class="hud">
+    <h1>🏢 Pejabat Syarikat Ricky</h1>
+    <div class="sub">Anda CEO. Seret untuk pusing, cubit / skrol untuk zum, klik watak untuk butiran.</div>
+    <div id="clock">—</div>
+    <div class="tiles">
+      <div class="tile"><b id="t-kerja">—</b><span>Sedang bekerja</span></div>
+      <div class="tile"><b id="t-siap">—</b><span>Siap 24 jam</span></div>
+      <div class="tile"><b id="t-gagal">—</b><span>Gagal 48 jam</span></div>
+      <div class="tile"><b id="t-next" style="font-size:13px">—</b><span id="t-next2">Giliran seterusnya</span></div>
+    </div>
+  </div>
+
+  <aside id="side" class="hud">
+    <section>
+      <h2>👤 Butiran ejen</h2>
+      <div id="det" class="det"><div class="muted">Klik mana-mana watak dalam pejabat.</div></div>
+    </section>
+    <section>
+      <h2>📰 Aktiviti terkini</h2>
+      <ul id="feed" class="feed"><li class="muted">Memuatkan…</li></ul>
+      <div id="src" class="muted" style="margin-top:8px"></div>
+    </section>
+  </aside>
+  <button id="toggle" type="button">📋 Butiran</button>
+
+  <div id="legend" class="hud">
+    <span>⌨️ Bekerja</span><span>✅ Baru siap</span><span>❗ Gagal</span><span>☕ Rehat</span><span>💤 Malam</span>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
