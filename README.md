@@ -63,3 +63,9 @@ Syarikat kini ada **8 pasukan, 24 ahli** (lihat [PERATURAN-SYARIKAT.md](PERATURA
 - **Buku Pelajaran** — [isu #2](https://github.com/ARNA-Tech20/pejabat-syarikat/issues/2). Pasukan catat kesilapan dan cara kerja berkesan di sini.
 - **Bilik Mesyuarat** (bilik J) — ahli thread Papan Syarikat terbaru duduk di sini dan berbincang. Gelembung **biru** = mesej sebenar; gelembung **kelabu** = sembang santai (hiasan).
 - **Kad skor pasukan** di panel kanan: tugas siap, gagal, mesej dan idea 30 hari lepas.
+
+## 🎨 Rupa pejabat (Blender)
+
+Watak kini ada rambut pendek/panjang, tudung, cermin mata, warna kulit berbeza dan kad nama mengikut warna pasukan. Persekitaran: jalan raya, tempat letak kereta, pokok kelapa, taman bunga, pagar renek, bangku, tiang bendera, teratai di kolam dan lampu siling yang menyala waktu malam.
+
+Pasukan mengutamakan produk sedia ada CEO (senarai dalam Doc peribadi, bukan dalam repo awam ini).

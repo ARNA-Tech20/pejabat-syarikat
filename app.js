@@ -53,6 +53,20 @@ const ROSTER = [
   m('WEIJIE', 'Wei Jie', 'CPO', '📈', 'I', 'SENIOR', '#0f5f5a', '#111111')
 ];
 const CEO = { id: 'CEO', kod: 'CEO', nama: 'Ricky', peranan: 'CEO', pasukan: 'Pejabat CEO', emoji: '👑', bilik: 'A', baju: '#1f2a44', rambut: '#111111', ceo: true };
+// Rupa setiap watak: r = rambut (p pendek, l panjang, t tudung), k = kulit, c = cermin mata, t = warna tudung
+const KULIT = { a: '#f3d2b3', b: '#e8b98a', c: '#c98d5e', d: '#9a6440' };
+const RUPA = {
+  CEO: { r: 'p', k: 'c' }, KETUASTAF: { r: 'p', k: 'b', c: 1 }, HANA: { r: 'l', k: 'b' },
+  IDRIS: { r: 'p', k: 'c' }, SITI: { r: 't', k: 'b', t: '#e07a5f' }, KUMAR: { r: 'p', k: 'd', c: 1 },
+  MEILING: { r: 'l', k: 'a' }, HAFIZ: { r: 'p', k: 'c' }, AINA: { r: 't', k: 'b', t: '#c77dff' },
+  FARID: { r: 'p', k: 'c', c: 1 }, NADIA: { r: 't', k: 'b', t: '#3d8bff' }, RAJ: { r: 'p', k: 'd' }, ZUL: { r: 'p', k: 'b' },
+  AMIR: { r: 'p', k: 'c' }, LINA: { r: 'l', k: 'a' }, DANIEL: { r: 'p', k: 'a', c: 1 }, YANA: { r: 't', k: 'c', t: '#f2d14a' },
+  HAKIM: { r: 'p', k: 'c' }, SARA: { r: 'l', k: 'b' }, BEN: { r: 'p', k: 'a' }, IKA: { r: 't', k: 'b', t: '#e0607e' },
+  RIZAL: { r: 'p', k: 'c' }, TINI: { r: 't', k: 'c', t: '#17a2d8' },
+  LIYANA: { r: 't', k: 'b', c: 1, t: '#c9a227' }, AZMAN: { r: 'p', k: 'c', c: 1 },
+  FAIZAL: { r: 'p', k: 'c', c: 1 }, ROSNAH: { r: 't', k: 'b', c: 1, t: '#7a1f3d' }, WEIJIE: { r: 'p', k: 'a', c: 1 }
+};
+const WARNA_PASUKAN = { A: '#1f2a44', B: '#f2c230', C: '#e65ca8', D: '#3d8bff', E: '#ff4fa3', F: '#7a5cff', G: '#27a845', H: '#c9a227', I: '#0f5f5a' };
 const SEMUA = [CEO, ...ROSTER];
 const TUGAS = Object.keys(JADUAL);
 const ALIAS_KOD = { PELANCAR: 'KETUASTAF', DESIGNER: 'PEMASARAN', PEMATUHAN: 'KEWANGAN', DEVELOPER: 'WEBAPP', QA: 'MOBILE', PENYELIDIK: 'IDEA' };
@@ -226,13 +240,26 @@ async function muatModel() {
     const g = templat.clone(true);
     const baju = new THREE.MeshStandardMaterial({ color: a.baju, roughness: 0.8 });
     const rambut = new THREE.MeshStandardMaterial({ color: a.rambut, roughness: 0.9 });
+    const rupa = RUPA[a.id] || { r: 'p', k: 'b' };
+    const kulit = new THREE.MeshStandardMaterial({ color: KULIT[rupa.k] || KULIT.b, roughness: 0.65 });
+    const tudung = new THREE.MeshStandardMaterial({ color: rupa.t || a.baju, roughness: 0.8 });
+    const tag = new THREE.MeshStandardMaterial({ color: WARNA_PASUKAN[a.bilik] || '#2f6bff', roughness: 0.5 });
+    const seluar = new THREE.MeshStandardMaterial({ color: rupa.r === 't' ? new THREE.Color(a.baju).multiplyScalar(0.55) : '#384058', roughness: 0.8 });
     g.traverse(o => {
       if (!o.isMesh) return;
       o.castShadow = true; o.receiveShadow = false;
-      if (o.material.name === 'Baju') o.material = baju;
-      else if (o.material.name === 'Rambut') o.material = rambut;
+      const n = o.material.name;
+      if (n === 'Baju') o.material = baju;
+      else if (n === 'Rambut') o.material = rambut;
+      else if (n === 'Kulit') o.material = kulit;
+      else if (n === 'Tudung') o.material = tudung;
+      else if (n === 'Tag') o.material = tag;
+      else if (n === 'Seluar') o.material = seluar;
       o.userData.id = a.id;
     });
+    const tunjuk = (nama, v) => { const x = g.getObjectByName(nama); if (x) x.visible = v; };
+    tunjuk('RambutPendek', rupa.r === 'p'); tunjuk('RambutPanjang', rupa.r === 'l'); tunjuk('Tudung', rupa.r === 't');
+    tunjuk('Kain', rupa.r === 't'); tunjuk('CerminMata', !!rupa.c); tunjuk('KadNama', !a.ceo);
     const mahkota = g.getObjectByName('Crown'); if (mahkota) mahkota.visible = !!a.ceo;
     const badan = new THREE.Group(); badan.add(g); badan.position.copy(kerusi); scene.add(badan);
     const label = teksSprite(a.emoji + ' ' + a.nama, { saiz: 30, tinggi: 0.38 }); label.position.set(0, 2.55, 0); badan.add(label);

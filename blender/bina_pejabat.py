@@ -387,6 +387,91 @@ for x in (-2.6, 2.6):
     for z in (17.5, 23.5):
         cyl(x, 1.1, z, 0.06, 2.2, M['hitam'], verts=8); sph(x, 2.3, z, 0.18, M['lampu'])
 
+# ---------- Persekitaran tambahan ----------
+def kelapa(x, z, s=1.0, cond=0.0):
+    """Pokok kelapa: batang melengkung (segmen) + pelepah terkulai."""
+    segs = 6; tx, tz = x, z
+    for i in range(segs):
+        f = i / segs; y0 = 0.6 * i * s
+        tx = x + math.sin(cond) * (f ** 2) * 1.2 * s; tz = z + math.cos(cond) * (f ** 2) * 1.2 * s
+        cyl(tx, y0 + 0.3 * s, tz, (0.2 - 0.06 * f) * s, 0.62 * s, M['batangKelapa'], verts=8)
+    top = (tx, 0.6 * segs * s, tz)
+    for i in range(11):
+        a = i * math.pi * 2 / 11 + random.uniform(-0.15, 0.15); t = random.uniform(0.3, 0.7); L = random.uniform(1.9, 2.4) * s
+        bx = top[0] + math.cos(a) * L / 2 * math.cos(t); by = -top[2] + math.sin(a) * L / 2 * math.cos(t); bz = top[1] - L / 2 * math.sin(t)
+        o = box(bx, bz, -by, L, 0.04 * s, 0.32 * s, random.choice([M['daunKelapa'], M['daun2']]))
+        o.rotation_euler = (0, t, a)
+    for i in range(3): sph(top[0] + math.cos(i * 2.1) * 0.18 * s, top[1] - 0.15 * s, top[2] + math.sin(i * 2.1) * 0.18 * s, 0.14 * s, M['buahKelapa'])
+
+def kereta(x, z, m, rot=0.0):
+    b = box(x, 0.45, z, 1.9, 0.55, 3.8, m, bevel=0.12, rot=rot)
+    t = box(x, 0.95, z - 0.15, 1.7, 0.5, 2.0, m, bevel=0.12, rot=rot)
+    box(x, 0.97, z - 0.15, 1.72, 0.38, 1.6, M['kacaKereta'], rot=rot)
+    for dx in (-0.85, 0.85):
+        for dz in (-1.2, 1.2):
+            c = cyl(x + dx, 0.32, z + dz, 0.32, 0.25, M['hitam'], verts=12); c.rotation_euler = (0, math.pi / 2, 0)
+    box(x - 0.6, 0.55, z + 1.91, 0.35, 0.12, 0.02, M['lampu']); box(x + 0.6, 0.55, z + 1.91, 0.35, 0.12, 0.02, M['lampu'])
+
+def bangku(x, z, rot=0.0):
+    box(x, 0.45, z, 1.8, 0.08, 0.5, M['kayu'], bevel=0.02, rot=rot)
+    box(x, 0.75, z - 0.22, 1.8, 0.35, 0.06, M['kayu'], bevel=0.02, rot=rot)
+    for dx in (-0.75, 0.75): box(x + dx, 0.22, z, 0.08, 0.44, 0.45, M['hitam'], rot=rot)
+
+def bunga(x, z, w, d):
+    box(x, 0.12, z, w, 0.24, d, M['tanahBunga'], bevel=0.03)
+    for i in range(int(w * d * 3)):
+        sph(x + random.uniform(-w / 2 + 0.15, w / 2 - 0.15), 0.32, z + random.uniform(-d / 2 + 0.1, d / 2 - 0.1), 0.13,
+            random.choice([M['bungaMerah'], M['bungaKuning'], M['bungaPutih'], M['bungaUngu'], M['daun3']]), ico=True)
+
+M.update(batangKelapa=mat('BatangKelapa', '#8a6a45', 0.9), daunKelapa=mat('DaunKelapa', '#4f9e3a', 0.8), buahKelapa=mat('BuahKelapa', '#6b8a2e', 0.7),
+         jalan=mat('Jalan', '#4a4d54', 0.95), garis=mat('Garis', '#f4f1e8', 0.8), garisKuning=mat('GarisKuning', '#f2c230', 0.8),
+         kacaKereta=mat('KacaKereta', '#2a3b52', 0.1, 0.3), keretaMerah=mat('KeretaMerah', '#c0392b', 0.35, 0.3), keretaPutih=mat('KeretaPutih', '#eef0f2', 0.35, 0.3),
+         keretaBiru=mat('KeretaBiru', '#2f5fa8', 0.35, 0.3), keretaKelabu=mat('KeretaKelabu', '#7d848c', 0.35, 0.3),
+         tanahBunga=mat('TanahBunga', '#6b4a32', 0.95), bungaMerah=mat('BungaMerah', '#e2485b', 0.7), bungaKuning=mat('BungaKuning', '#f5c842', 0.7),
+         bungaPutih=mat('BungaPutih', '#fbf7f0', 0.7), bungaUngu=mat('BungaUngu', '#9b5de5', 0.7), pagar=mat('Pagar', '#3d7d3f', 0.9),
+         benderaMerah=mat('BenderaMerah', '#cc0001', 0.8), benderaBiru=mat('BenderaBiru', '#010066', 0.8), benderaKuning=mat('BenderaKuning', '#ffcc00', 0.6),
+         teratai=mat('Teratai', '#3f8f4a', 0.8), bungaTeratai=mat('BungaTeratai', '#f7a1c4', 0.7), lampuSiling=mat('LampuSiling', '#fff6dc', 0.3, emit='#ffe7a8', emit_str=2.2))
+
+# Jalan raya di depan & tempat letak kereta
+box(0, -0.0, 31, 104, 0.04, 6, M['jalan'])
+for i in range(-12, 13): box(i * 4, 0.025, 31, 2.0, 0.01, 0.15, M['garis'])
+box(0, 0.025, 28.1, 104, 0.01, 0.12, M['garisKuning'])
+box(0, 0.0, 24.5, 5.5, 0.05, 7, M['jalan'])  # jalan masuk ke pintu pagar
+px0 = -16
+box(px0, 0.01, 22.5, 18, 0.04, 8, M['jalan'])
+for i in range(7): box(px0 - 7.5 + i * 2.5, 0.04, 22.5, 0.1, 0.01, 4.8, M['garis'])
+for i, m_ in enumerate([M['keretaMerah'], M['keretaPutih'], M['keretaBiru'], M['keretaKelabu'], M['keretaPutih']]):
+    if i == 2: continue
+    kereta(px0 - 6.25 + i * 2.5, 22.3, m_)
+# Pagar pokok renek di sekeliling kawasan (dengan bukaan pintu)
+for x in range(-46, 47, 2):
+    if abs(x) < 4: continue
+    box(x, 0.45, 27, 2.0, 0.9, 0.8, M['pagar'], bevel=0.15)
+for z in range(-30, 27, 2):
+    box(-48, 0.45, z, 0.8, 0.9, 2.0, M['pagar'], bevel=0.15); box(48, 0.45, z, 0.8, 0.9, 2.0, M['pagar'], bevel=0.15)
+# Taman bunga di depan bangunan
+for x in (-20, -10, 10, 20): bunga(x, 15.6, 6, 1.0)
+bunga(-5.5, 19, 2.5, 2.5); bunga(5.5, 19, 2.5, 2.5)
+# Bangku & tiang bendera
+bangku(-8, 21.5); bangku(8, 21.5)
+cyl(6.5, 3.5, 19.5, 0.07, 7.0, M['besi'], verts=8); sph(6.5, 7.05, 19.5, 0.1, M['emas'])
+for i in range(7):
+    box(7.55, 6.6 - i * 0.16, 19.5, 2.0, 0.08, 0.02, M['benderaMerah'] if i % 2 == 0 else M['putih'])
+box(7.0, 6.37, 19.51, 1.0, 0.56, 0.02, M['benderaBiru'])
+box(6.9, 6.37, 19.53, 0.3, 0.3, 0.01, M['benderaKuning']); box(7.25, 6.37, 19.53, 0.18, 0.18, 0.01, M['benderaKuning'])
+# Teratai di kolam
+for i in range(7):
+    a = random.uniform(0, 6.28); r = random.uniform(0.6, 3.8)
+    cyl(-37 + math.cos(a) * r, 0.07, 18 + math.sin(a) * r, random.uniform(0.3, 0.5), 0.02, M['teratai'], verts=10)
+    if i % 2 == 0: sph(-37 + math.cos(a) * r, 0.14, 18 + math.sin(a) * r, 0.12, M['bungaTeratai'], ico=True)
+# Pokok kelapa
+for (x, z, s, c) in [(-42, 10, 1.0, 0.6), (-40, 25, 1.1, 1.2), (42, -2, 1.0, -0.8), (43, 22, 1.15, -1.4), (-24, 24, 0.95, 0.3), (26, 24, 1.0, -0.4), (-43, -24, 1.05, 2.5), (40, -26, 0.95, -2.2)]:
+    kelapa(x, z, s, c)
+# Lampu siling (berkilau waktu malam) di setiap bilik & koridor
+for k, (cx, cz, nama) in BILIK.items():
+    cyl(cx, FLOOR + 2.6, cz, 0.28, 0.05, M['lampuSiling'], verts=16)
+    cyl(cx, FLOOR + 2.72, cz, 0.3, 0.12, M['hitam'], verts=16, r2=0.12)
+
 gabung()
 export(os.path.join(OUT, 'office.glb'), draco=True)
 print('office.glb ok', len(bpy.data.objects), 'objek')
@@ -394,37 +479,74 @@ print('office.glb ok', len(bpy.data.objects), 'objek')
 # ---------------- WATAK ----------------
 reset()
 MATS.clear()
-kulit = mat('Kulit', '#f1c48f', 0.7); baju = mat('Baju', '#4a7bd0', 0.8); seluar = mat('Seluar', '#384058', 0.8)
-rambut = mat('Rambut', '#2b2b2b', 0.9); kasut = mat('Kasut', '#1d1d1f', 0.5); mata = mat('Mata', '#18181b', 0.3); pipi = mat('Pipi', '#f19a8a', 0.8)
+kulit = mat('Kulit', '#e8b98a', 0.65); baju = mat('Baju', '#4a7bd0', 0.75); seluar = mat('Seluar', '#384058', 0.8)
+rambut = mat('Rambut', '#2b2b2b', 0.85); kasut = mat('Kasut', '#1d1d1f', 0.45); mata = mat('Mata', '#18181b', 0.25); putihMata = mat('PutihMata', '#ffffff', 0.3)
+pipi = mat('Pipi', '#f29a8a', 0.8); tudungM = mat('Tudung', '#6b7cff', 0.8); tag = mat('Tag', '#2f6bff', 0.5); cermin = mat('Cermin', '#222222', 0.3, 0.5)
+kolar = mat('Kolar', '#f4f4f4', 0.7); tali = mat('Tali', '#2f3e5c', 0.7)
 root = empty('Person', 0, 0, 0)
+def anak(o, p): o.parent = p; o.matrix_parent_inverse = p.matrix_world.inverted(); return o
 # kaki (pivot di pinggul)
-for nm, x in (('LegL', -0.13), ('LegR', 0.13)):
+for nm, x in (('LegL', -0.12), ('LegR', 0.12)):
     p = empty(nm, x, 0.78, 0, parent=root)
-    o = box(x, 0.42, 0, 0.2, 0.62, 0.24, seluar, bevel=0.06, parent=None)
-    o.parent = p; o.matrix_parent_inverse = p.matrix_world.inverted()
-    s = box(x, 0.07, 0.04, 0.22, 0.12, 0.32, kasut, bevel=0.05); s.parent = p; s.matrix_parent_inverse = p.matrix_world.inverted()
-# badan
-t = box(0, 1.08, 0, 0.6, 0.66, 0.36, baju, bevel=0.12, name='Torso'); t.parent = root
-k = box(0, 1.38, 0, 0.3, 0.08, 0.3, kulit, bevel=0.03); k.parent = root
+    anak(cyl(x, 0.45, 0, 0.1, 0.62, seluar, verts=12, r2=0.085), p)
+    anak(box(x, 0.07, 0.05, 0.2, 0.12, 0.34, kasut, bevel=0.06), p)
+# badan: bentuk bulat sedikit (kon terbalik) + pinggang
+t = cyl(0, 1.08, 0, 0.28, 0.66, baju, verts=20, r2=0.31, name='Torso'); t.scale = (1, 0.68, 1); t.parent = root
+anak(cyl(0, 0.76, 0, 0.27, 0.08, seluar, verts=20), root).scale = (1, 0.68, 1)
+anak(cyl(0, 1.39, 0, 0.16, 0.06, kolar, verts=16), root)
+anak(cyl(0, 1.45, 0, 0.09, 0.1, kulit, verts=12), root)
+# kad nama syarikat (warna ikut pasukan)
+anak(box(0.1, 1.0, 0.215, 0.13, 0.17, 0.02, tag, bevel=0.01, name='KadNama'), root)
+anak(box(0.05, 1.22, 0.205, 0.02, 0.3, 0.01, tali), root); anak(box(0.15, 1.22, 0.205, 0.02, 0.3, 0.01, tali), root)
+# kain panjang (baju kurung) — disorok kecuali ahli bertudung
+kn = empty('Kain', 0, 0, 0, parent=root)
+o = anak(cyl(0, 0.42, 0, 0.3, 0.72, seluar, verts=20, r2=0.24), kn); o.scale = (1, 0.8, 1)
 # tangan (pivot di bahu)
-for nm, x in (('ArmL', -0.4), ('ArmR', 0.4)):
+for nm, x in (('ArmL', -0.37), ('ArmR', 0.37)):
     p = empty(nm, x, 1.32, 0, parent=root)
-    o = box(x, 1.05, 0, 0.17, 0.52, 0.19, baju, bevel=0.07); o.parent = p; o.matrix_parent_inverse = p.matrix_world.inverted()
-    h = sph(x, 0.74, 0, 0.1, kulit); h.parent = p; h.matrix_parent_inverse = p.matrix_world.inverted()
+    anak(sph(x, 1.3, 0, 0.1, baju, seg=12), p)
+    anak(cyl(x, 1.04, 0, 0.085, 0.5, baju, verts=12, r2=0.07), p)
+    anak(sph(x, 0.75, 0, 0.085, kulit, seg=12), p)
 # kepala (pivot di leher)
 hp = empty('HeadPivot', 0, 1.42, 0, parent=root)
-def ke_kepala(o): o.parent = hp; o.matrix_parent_inverse = hp.matrix_world.inverted()
-ke_kepala(sph(0, 1.72, 0, 0.3, kulit, sy=1.0, seg=24, name='Head'))
-ke_kepala(sph(0, 1.82, -0.03, 0.315, rambut, sy=0.78, sz=1.02, seg=24, name='Hair'))
-ke_kepala(sph(0, 1.66, -0.2, 0.26, rambut, sy=0.9, sz=0.6, seg=16))
+anak(sph(0, 1.74, 0, 0.3, kulit, sy=1.02, seg=24, name='Head'), hp)
+for x in (-0.3, 0.3): anak(sph(x, 1.72, 0, 0.06, kulit, sx=0.6, seg=10), hp)  # telinga
 for x in (-0.1, 0.1):
-    ke_kepala(sph(x, 1.72, 0.275, 0.045, mata, sz=0.5, seg=10))
-    ke_kepala(sph(x * 1.5, 1.63, 0.255, 0.045, pipi, sz=0.3, seg=8))
-ke_kepala(box(0, 1.6, 0.29, 0.1, 0.025, 0.01, mata))
+    anak(sph(x, 1.74, 0.265, 0.055, putihMata, sz=0.5, seg=12), hp)
+    anak(sph(x, 1.74, 0.285, 0.035, mata, sz=0.5, seg=10), hp)
+    anak(sph(x + 0.012, 1.755, 0.3, 0.011, putihMata, seg=6), hp)
+    anak(sph(x * 1.55, 1.65, 0.255, 0.045, pipi, sz=0.3, seg=8), hp)
+    anak(box(x, 1.84, 0.27, 0.11, 0.022, 0.02, rambut, rot=0.12 if x < 0 else -0.12), hp)  # kening
+anak(sph(0, 1.69, 0.3, 0.035, kulit, seg=10), hp)  # hidung
+for i, dx in enumerate((-0.045, 0, 0.045)):  # senyum
+    anak(box(dx, 1.61 + (0.008 if i != 1 else 0), 0.285, 0.05, 0.018, 0.01, mata, rot=(0.35 if dx < 0 else -0.35 if dx > 0 else 0)), hp)
+# rambut pendek
+rp = empty('RambutPendek', 0, 1.42, 0, parent=hp)
+anak(sph(0, 1.85, -0.03, 0.315, rambut, sy=0.72, sz=1.04, seg=24, name='Hair'), rp)
+anak(sph(0, 1.7, -0.19, 0.27, rambut, sy=0.95, sz=0.62, seg=16), rp)
+anak(sph(-0.15, 1.92, 0.15, 0.13, rambut, sy=0.5, seg=12), rp)
+# rambut panjang
+rl = empty('RambutPanjang', 0, 1.42, 0, parent=hp)
+anak(sph(0, 1.86, -0.02, 0.32, rambut, sy=0.74, sz=1.05, seg=24), rl)
+anak(sph(0, 1.55, -0.18, 0.3, rambut, sx=1.05, sy=1.35, sz=0.55, seg=16), rl)
+for x in (-0.27, 0.27): anak(sph(x, 1.6, 0.02, 0.1, rambut, sy=2.0, sz=0.8, seg=12), rl)
+# tudung
+td = empty('Tudung', 0, 1.42, 0, parent=hp)
+anak(sph(0, 1.76, -0.1, 0.345, tudungM, sy=1.1, sz=0.95, seg=24), td)
+anak(sph(0, 1.9, 0.04, 0.31, tudungM, sy=0.62, sz=0.95, seg=20), td)
+for x in (-0.29, 0.29): anak(sph(x, 1.66, 0.04, 0.09, tudungM, sx=0.8, sy=2.2, sz=1.4, seg=12), td)
+anak(cyl(0, 1.33, -0.02, 0.4, 0.24, tudungM, verts=20, r2=0.24), td)
+anak(sph(0, 1.33, 0.1, 0.19, tudungM, sx=1.4, sy=0.4, sz=0.7, seg=16), td)
+# cermin mata
+cm = empty('CerminMata', 0, 1.42, 0, parent=hp)
+for x in (-0.1, 0.1):
+    for (dx, dy, w, h) in ((0, 0.055, 0.12, 0.016), (0, -0.055, 0.12, 0.016), (-0.055, 0, 0.016, 0.12), (0.055, 0, 0.016, 0.12)):
+        anak(box(x + dx, 1.74 + dy, 0.31, w, h, 0.012, cermin), cm)
+anak(box(0, 1.75, 0.31, 0.08, 0.014, 0.012, cermin), cm)
 # mahkota (untuk CEO, disorok untuk ejen lain)
 cr = empty('Crown', 0, 2.06, 0, parent=hp)
-c = cyl(0, 2.1, 0, 0.17, 0.12, mat('Emas', '#f2c230', 0.25, 0.9), verts=10); c.parent = cr; c.matrix_parent_inverse = cr.matrix_world.inverted()
+c = cyl(0, 2.12, 0, 0.17, 0.12, mat('Emas', '#f2c230', 0.25, 0.9), verts=10); anak(c, cr)
 for i in range(5):
-    a = i * 1.2566; g = sph(math.cos(a) * 0.15, 2.2, math.sin(a) * 0.15, 0.035, mat('Permata', '#e0405a', 0.2, 0.3)); g.parent = cr; g.matrix_parent_inverse = cr.matrix_world.inverted()
+    a2 = i * 1.2566; anak(sph(math.cos(a2) * 0.15, 2.22, math.sin(a2) * 0.15, 0.035, mat('Permata', '#e0405a', 0.2, 0.3)), cr)
 export(os.path.join(OUT, 'person.glb'))
 print('person.glb ok')

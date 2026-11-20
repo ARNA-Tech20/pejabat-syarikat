@@ -11,6 +11,8 @@ Setiap pasukan **wajib** membaca fail ini sebelum bekerja. Setiap idea, PR dan l
 | 2 | 📱 **1 app atau game live di Google Play** | Satu produk (cth. Kira Gaji MY atau Gabung Kuih) diterbitkan oleh CEO dengan dasar privasi, listing dan grafik lengkap | Mobile App, Studio Game, Kreatif & Pemasaran |
 | 3 | ⚖️ **Asas pematuhan** | Kebenaran pekerjaan luar KKM diperoleh; setiap produk yang dilancar ada dasar privasi & terma yang hidup | Kewangan & Pematuhan, Pejabat CEO |
 
-**Tidak dibuat suku ini** (supaya fokus): produk baharu saiz L, iklan berbayar, dan pasaran luar negara selain Shift Calendar & CodeReady yang sedia ada.
+**Guna kerja sedia ada dulu:** semua sasaran dicapai dengan produk yang sudah ada dalam portfolio CEO (Google Doc peribadi, lihat PERATURAN-SYARIKAT.md bahagian 1B).
+
+**Tidak dibuat suku ini** (supaya fokus): produk baharu yang tiada dalam portfolio, produk baharu saiz L, iklan berbayar, dan pasaran luar negara selain Shift Calendar & CodeReady yang sedia ada.
 
 _Majlis Senior menyemak kemajuan sasaran setiap Sabtu. Ketua Staf melaporkannya dalam Ringkasan CEO setiap Ahad._

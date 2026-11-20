@@ -41,6 +41,8 @@ Setiap larian menggunakan kuota langganan Claude milik CEO. Bekerja dengan cekap
 
 ## 1B. Wajib baca sebelum bekerja
 
+0. **Portfolio produk CEO** — Google Doc peribadi bertajuk **"Portfolio Syarikat — RICKY & CO. (SULIT)"** di Google Drive (cari mengikut tajuk). **Guna kerja sedia ada DULU**: siapkan dan lancarkan produk dalam Doc itu mengikut keutamaan. Idea baharu mesti penambahbaikan produk dalam senarai; produk baharu sepenuhnya dibekukan sehingga Sasaran 2 tercapai. Jangan sentuh bahagian B dalam Doc itu. **Jangan salin isi Doc ini ke repo awam, isu atau komen** — sebut nama produk secara umum sahaja.
+
 1. **[MATLAMAT.md](MATLAMAT.md)** — 3 sasaran syarikat suku ini. Setiap idea, PR dan laporan mesti sebut `Sasaran: 1/2/3`.
 2. **Buku Pelajaran** — isu GitHub berlabel `pelajaran` ("📚 Buku Pelajaran Syarikat", isu #2) dan semua komennya: `gh api "repos/ARNA-Tech20/pejabat-syarikat/issues/2/comments?per_page=100"`. Jangan ulang kesilapan yang sudah dicatat.
 3. Bila tugas anda **GAGAL**, PR anda **ditolak senior**, atau anda temui cara kerja yang berkesan: tambah **satu komen** dalam isu Buku Pelajaran — `📚 <apa berlaku> → <apa perlu dibuat lain kali>`.
