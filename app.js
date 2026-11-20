@@ -14,12 +14,13 @@ const KL = 8 * 3600e3;
 const JADUAL = {
   KETUASTAF: '45 21 * * 0', PELANCAR: '10 21 * * 0', IDEA: '45 20 * * 6', DESIGNER: '10 20 * * 1', PEMASARAN: '40 20 * * 1',
   WEBAPP: '15 20 * * 4', GAME: '20 20 * * 5', MOBILE: '35 20 * * 3', JUALAN: '25 20 * * 2', SOKONGAN: '5 20 * * *',
-  KEWANGAN: '20 20 1 * *', PEMATUHAN: '50 20 3 * *'
+  KEWANGAN: '20 20 1 * *', PEMATUHAN: '50 20 3 * *', SENIOR: '30 21 * * 6'
 };
 // Pasukan & ahli (mesti sama dengan PERATURAN-SYARIKAT.md dan model Blender)
 const PASUKAN = {
   A: 'Pejabat CEO', B: 'Makmal Idea', C: 'Kreatif & Pemasaran', D: 'Pasukan Web App',
-  E: 'Studio Game', F: 'Pasukan Mobile App', G: 'Jualan & Sokongan', H: 'Kewangan & Pematuhan'
+  E: 'Studio Game', F: 'Pasukan Mobile App', G: 'Jualan & Sokongan', H: 'Kewangan & Pematuhan',
+  I: 'Majlis Senior', J: 'Bilik Mesyuarat'
 };
 const m = (id, nama, peranan, emoji, bilik, kod, baju, rambut) => ({ id, nama, peranan, emoji, bilik, kod, pasukan: PASUKAN[bilik], cron: JADUAL[kod], baju, rambut });
 const ROSTER = [
@@ -46,7 +47,10 @@ const ROSTER = [
   m('RIZAL', 'Rizal', 'Jualan B2B', '🤝', 'G', 'JUALAN', '#27a845', '#262626'),
   m('TINI', 'Tini', 'Sokongan Pelanggan', '💬', 'G', 'SOKONGAN', '#17a2d8', '#6b4423'),
   m('LIYANA', 'Liyana', 'CFO', '💰', 'H', 'KEWANGAN', '#c9a227', '#1f1f1f'),
-  m('AZMAN', 'Azman', 'Pematuhan', '⚖️', 'H', 'PEMATUHAN', '#a05a2c', '#333333')
+  m('AZMAN', 'Azman', 'Pematuhan', '⚖️', 'H', 'PEMATUHAN', '#a05a2c', '#333333'),
+  m('FAIZAL', 'Dr. Faizal', 'CTO', '🧠', 'I', 'SENIOR', '#2b2f3a', '#9a9a9a'),
+  m('ROSNAH', 'Puan Rosnah', 'COO', '🎯', 'I', 'SENIOR', '#7a1f3d', '#2a1a12'),
+  m('WEIJIE', 'Wei Jie', 'CPO', '📈', 'I', 'SENIOR', '#0f5f5a', '#111111')
 ];
 const CEO = { id: 'CEO', kod: 'CEO', nama: 'Ricky', peranan: 'CEO', pasukan: 'Pejabat CEO', emoji: '👑', bilik: 'A', baju: '#1f2a44', rambut: '#111111', ceo: true };
 const SEMUA = [CEO, ...ROSTER];
@@ -55,7 +59,7 @@ const ketuaTugas = kod => ROSTER.find(a => a.kod === kod);
 
 // Bilik (mesti sama dengan model Blender models/office.glb)
 const BILIK = {};
-for (const [k, x, z] of [['A', -16.5, -7.5], ['B', -5.5, -7.5], ['C', 5.5, -7.5], ['D', 16.5, -7.5], ['E', -16.5, 7.5], ['F', -5.5, 7.5], ['G', 5.5, 7.5], ['H', 16.5, 7.5]])
+for (const [k, x, z] of [['A', -22, -7.5], ['B', -11, -7.5], ['C', 0, -7.5], ['D', 11, -7.5], ['I', 22, -7.5], ['E', -22, 7.5], ['F', -11, 7.5], ['G', 0, 7.5], ['H', 11, 7.5], ['J', 22, 7.5]])
   BILIK[k] = { x, z, n: PASUKAN[k].toUpperCase() };
 const RW = 11, RD = 11, LANTAI = 0.3;
 const PANTRI = { x: 0, z: 0 };
@@ -111,7 +115,7 @@ scene.fog = new THREE.Fog('#bfe3f7', 70, 140);
 const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 400);
 camera.position.set(26, 30, 36);
 const controls = new OrbitControls(camera, renderer.domElement);
-window.__pk = { camera, controls };
+window.__pk = { camera, controls, agen: () => AGEN };
 controls.target.set(0, 0.5, 1);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
@@ -174,12 +178,12 @@ function bualSprite() {
   const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
   sp.scale.set(8.1, 2.7, 1); sp.renderOrder = 12; sp.visible = false;
-  sp.userData.set = (teks) => {
+  sp.userData.set = (teks, papan = true) => {
     const g = c.getContext('2d'); g.clearRect(0, 0, 768, 256);
-    g.font = '600 34px system-ui,"Segoe UI",Roboto,sans-serif';
+    g.font = (papan ? '600 ' : 'italic 500 ') + '34px system-ui,"Segoe UI",Roboto,sans-serif';
     const baris = balut(g, teks, 690, 3);
     const h = 36 + baris.length * 44, y0 = 214 - h;
-    g.fillStyle = 'rgba(255,255,255,0.97)'; g.strokeStyle = '#2f3e5c'; g.lineWidth = 4;
+    g.fillStyle = papan ? 'rgba(255,255,255,0.97)' : 'rgba(236,240,246,0.93)'; g.strokeStyle = papan ? '#2f6bff' : '#9aa6bb'; g.lineWidth = papan ? 6 : 3;
     g.beginPath(); g.roundRect(8, y0, 752, h, 26); g.fill(); g.stroke();
     g.beginPath(); g.moveTo(360, y0 + h - 2); g.lineTo(384, 250); g.lineTo(408, y0 + h - 2); g.closePath(); g.fill();
     g.beginPath(); g.moveTo(360, y0 + h); g.lineTo(384, 250); g.lineTo(408, y0 + h); g.stroke();
@@ -248,20 +252,33 @@ async function muatModel() {
 // ---------- Logik gerak ----------
 const gerak = !matchMedia('(prefers-reduced-motion: reduce)').matches;
 const V = (x, z) => new THREE.Vector3(x, LANTAI, z);
-function dalamBilik(o, p) { const b = BILIK[o.a.bilik]; return Math.abs(p.x - b.x) < RW / 2 - 0.3 && Math.abs(p.z - b.z) < RD / 2 - 0.2; }
+function bilikDi(p) { for (const k in BILIK) { const b = BILIK[k]; if (Math.abs(p.x - b.x) < RW / 2 - 0.3 && Math.abs(p.z - b.z) < RD / 2 - 0.2) return k; } return null; }
+const LORONG = z => z < 0 ? -1.65 : 1.7;
+function keluarMasuk(k) { const b = BILIK[k]; const zc = pintu(k); const arah = b.z < 0 ? 1 : -1; return { dIn: V(b.x, zc - arah * 0.8), dOut: V(b.x, zc + arah * 0.9) }; }
 function laluan(o, dest) {
-  const b = BILIK[o.a.bilik]; const zc = pintu(o.a.bilik); const arah = b.z < 0 ? 1 : -1;
-  const kini = o.badan.position; const dIn = V(b.x, zc - arah * 0.8), dOut = V(b.x, zc + arah * 0.9);
-  const aisle = z => V(b.x, z);
-  const a = dalamBilik(o, kini), c = dalamBilik(o, dest);
-  if (a && c) return [aisle(kini.z), aisle(dest.z), dest];
-  if (a && !c) return [aisle(kini.z), dIn, dOut, dest];
-  if (!a && c) return [dOut, dIn, aisle(dest.z), dest];
-  return [dest];
+  const kini = o.badan.position; const a = bilikDi(kini), c = bilikDi(dest);
+  if (a && a === c) return [V(BILIK[a].x, kini.z), V(BILIK[a].x, dest.z), dest];
+  const jalan = [];
+  let z0 = kini.z, x0 = kini.x;
+  if (a) { const g = keluarMasuk(a); jalan.push(a === 'J' ? V(kini.x, g.dIn.z) : V(BILIK[a].x, kini.z), g.dIn, g.dOut); z0 = g.dOut.z; x0 = g.dOut.x; }
+  if (c) {
+    const g = keluarMasuk(c); const la = LORONG(z0), lc = LORONG(BILIK[c].z);
+    jalan.push(V(x0, la));
+    if (la !== lc) {
+      const xc = BILIK[c].x; let xs = 9, terbaik = 1e9;
+      for (const x of [-24.5, -9, 9, 24.5]) { const d = Math.abs(x0 - x) + Math.abs(x - xc); if (d < terbaik) { terbaik = d; xs = x; } }
+      jalan.push(V(xs, la), V(xs, lc));
+    }
+    jalan.push(V(BILIK[c].x, lc), g.dOut, g.dIn);
+    jalan.push(c === 'J' ? V(dest.x, g.dIn.z) : V(BILIK[c].x, dest.z));
+  }
+  jalan.push(dest);
+  return jalan;
 }
 function pilihSasaran(o) {
+  if (o.mesy) return o.mesy.clone();
   const b = BILIK[o.a.bilik]; const r = Math.random(); const arah = b.z < 0 ? 1 : -1;
-  if (r < 0.35) return V(PANTRI.x + (Math.random() * 4 - 2), PANTRI.z - 0.15 + Math.random() * 0.2);
+  if (r < 0.3) return V(PANTRI.x + (Math.random() * 4 - 2), PANTRI.z - 0.15 + Math.random() * 0.2);
   if (r < 0.65) return o.kerusi.clone();
   return V(b.x + (Math.random() * 2.4 - 1.2), b.z + arah * (2.2 + Math.random() * 1.6));
 }
@@ -279,15 +296,17 @@ const clock = new THREE.Clock();
 function tick() {
   const dt = Math.min(clock.getDelta(), 0.1); const now = performance.now(); const t = now / 1000;
   for (const o of AGEN) {
-    if (gerak && o.k === 'rehat' && now > o.tunggu && !o.jalan.length) { o.jalan = laluan(o, pilihSasaran(o)); o.tunggu = now + 7000 + Math.random() * 10000; }
+    const diMesyAwal = o.mesy && Math.hypot(o.badan.position.x - o.mesy.x, o.badan.position.z - o.mesy.z) < 0.05;
+    if (gerak && o.k === 'rehat' && now > o.tunggu && !o.jalan.length && !diMesyAwal) { o.jalan = laluan(o, pilihSasaran(o)); o.tunggu = now + 7000 + Math.random() * 10000; }
     const p = o.badan.position; let berjalan = false;
     if (o.jalan.length) {
-      const s = o.jalan[0]; const d = new THREE.Vector3(s.x - p.x, 0, s.z - p.z); const dist = d.length(); const v = 1.5 * dt;
+      const s = o.jalan[0]; const d = new THREE.Vector3(s.x - p.x, 0, s.z - p.z); const dist = d.length(); const v = 2.0 * dt;
       if (!gerak) { const last = o.jalan[o.jalan.length - 1]; p.x = last.x; p.z = last.z; o.jalan = []; }
       else if (dist > v) { d.normalize(); p.x += d.x * v; p.z += d.z * v; const sasar = Math.atan2(d.x, d.z); o.g.rotation.y += (((sasar - o.g.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI) * Math.min(1, dt * 10); berjalan = true; }
       else { p.x = s.x; p.z = s.z; o.jalan.shift(); }
     }
-    const diKerusi = Math.hypot(p.x - o.kerusi.x, p.z - o.kerusi.z) < 0.05;
+    const diMesy = o.mesy && !o.jalan.length && Math.hypot(p.x - o.mesy.x, p.z - o.mesy.z) < 0.05;
+    const diKerusi = diMesy || Math.hypot(p.x - o.kerusi.x, p.z - o.kerusi.z) < 0.05;
     const f = t * 8 + o.fasa; const [kl, kr] = o.kaki, [tl, tr] = o.tangan;
     if (berjalan) {
       o.g.position.y = Math.abs(Math.sin(f)) * 0.04;
@@ -295,8 +314,9 @@ function tick() {
       if (tl) { tl.rotation.x = -Math.sin(f) * 0.45; tr.rotation.x = Math.sin(f) * 0.45; }
       if (o.kepala) o.kepala.rotation.x = 0;
     } else if (diKerusi) {
-      o.g.rotation.y += (0 - o.g.rotation.y) * Math.min(1, dt * 8);
-      o.g.position.y = -0.24;
+      const hadap = diMesy ? o.mesyRot : 0;
+      o.g.rotation.y += (hadap - o.g.rotation.y) * Math.min(1, dt * 8);
+      o.g.position.y = diMesy ? -0.22 : -0.24;
       if (kl) kl.rotation.x = kr.rotation.x = -1.5;
       if (o.k === 'kerja' && gerak) {
         tl.rotation.x = -1.15 + Math.sin(t * 20) * 0.1; tr.rotation.x = -1.15 + Math.cos(t * 21) * 0.1;
@@ -341,7 +361,9 @@ function saiz() {
   renderer.setSize(w, h);
   camera.aspect = w / h;
   const asp = w / h;
-  camera.position.setLength(asp >= 1.25 ? 60 : Math.min(105, 60 * 0.75 / asp));
+  const len = asp >= 1.25 ? 66 : Math.min(120, 70 * 0.75 / asp);
+  controls.target.set(w > 900 ? 7 : 0, 0.5, 1);
+  camera.position.copy(controls.target).addScaledVector(new THREE.Vector3(26, 30, 36).normalize(), len);
   camera.updateProjectionMatrix();
 }
 addEventListener('resize', saiz);
@@ -369,7 +391,7 @@ function lukisButiran() {
   if (pilihan === 'CEO') {
     box.append(el('div', 'nm', '👑 Ricky — CEO'), el('div', 'muted', 'Semua pasukan melapor kepada anda. Lulus atau tolak idea dengan label lulus-ceo / ditolak-ceo pada isu di Papan Syarikat.'));
     row('Idea menunggu keputusan anda', String(IDEA.filter(i => i.label.includes('perlu-ceo') && !i.tutup).length));
-    row('Pasukan', '8 pasukan · 24 ahli');
+    row('Syarikat', '8 pasukan · 24 ahli · 3 senior');
     return;
   }
   const a = ROSTER.find(x => x.id === pilihan); if (!a) return;
@@ -408,6 +430,7 @@ function lukisPanel(ralat) {
   }
   document.getElementById('src').textContent = 'Sumber: log/ dan Issues dalam repo ' + REPO + ' · dikemas kini ' + tarikh(now);
   lukisPapan();
+  lukisSkor();
   lukisButiran();
 }
 
@@ -436,9 +459,10 @@ let BUAL = [], IDEA = [];
 const KEPALA = /^\s*\*\*\s*(\S+)\s+([^·*]+?)\s*·\s*([^(*]+?)\s*\(([^)]*)\)\s*:\s*\*\*\s*(.*)$/s;
 const normal = t => t.normalize('NFKD').replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
 function cariAhli(nama, pasukan) {
-  const n = normal(nama);
+  const n = normal(nama.replace(/^(dr\.?|puan|encik|cik|tuan)\s+/i, ''));
+  const sama = a => normal(a.nama) === n || normal(a.nama.replace(/^(dr\.?|puan|encik|cik|tuan)\s+/i, '')) === n;
   if (n === 'ricky' || n === 'rickyceo') return CEO;
-  const calon = SEMUA.filter(a => normal(a.nama) === n);
+  const calon = SEMUA.filter(sama);
   return calon.find(a => normal(a.pasukan) === normal(pasukan)) || calon[0] || null;
 }
 function hurai(body) {
@@ -462,8 +486,11 @@ function bualDemo() {
     b('LIYANA', 'Setuju, kos sifar. Pastikan tiada janji harga baharu sebelum CEO lulus.', 41, '📅 Mesyuarat Mingguan'),
     b('BEN', 'Widget Batik dah siap ujian di 3 saiz skrin. Menunggu ikon baharu dari Mei Ling.', 55, '📅 Mesyuarat Mingguan'),
     b('MEILING', 'Ikon siap esok, saya hantar dua pilihan warna.', 58, '📅 Mesyuarat Mingguan'),
-    b('KETUASTAF', 'Idea langganan premium Kira Gaji saya tanda perlu-ceo — ada perbelanjaan.', 80, '💡 Idea: Kira Gaji Premium')
+    b('KETUASTAF', 'Idea langganan premium Kira Gaji saya tanda perlu-ceo — ada perbelanjaan.', 80, '💡 Idea: Kira Gaji Premium'),
+    b('FAIZAL', 'PR cabaran harian: logik OK, tapi tambah ujian untuk tukar hari tengah malam sebelum lulus.', 2, '💡 Idea: Cabaran harian Gabung Kuih'),
+    b('WEIJIE', 'Idea ini terus bantu Sasaran 2 (app live di Play Store). Saya pilih sebagai idea minggu ini.', 6, '💡 Idea: Cabaran harian Gabung Kuih')
   ];
+  BUAL.sort((a, b) => b.t - a.t);
   IDEA = [
     { tajuk: 'Cabaran harian Gabung Kuih', label: ['disokong', 'sedang-dibina'], pasukan: 'Studio Game', url: '' },
     { tajuk: 'Halaman templat slip gaji percuma', label: ['disokong'], pasukan: 'Pasukan Web App', url: '' },
@@ -471,7 +498,7 @@ function bualDemo() {
   ];
 }
 async function muatPapan() {
-  if (DEMO) { bualDemo(); lukisPapan(); return; }
+  if (DEMO) { bualDemo(); lukisPapan(); lukisSkor(); tetapMesyuarat(); return; }
   try {
     const since = new Date(Date.now() - 14 * 864e5).toISOString();
     const [ri, rk] = await Promise.all([
@@ -491,7 +518,7 @@ async function muatPapan() {
       const pk = { 'pasukan:ceo': 'Pejabat CEO', 'pasukan:idea': 'Makmal Idea', 'pasukan:kreatif': 'Kreatif & Pemasaran', 'pasukan:webapp': 'Pasukan Web App', 'pasukan:game': 'Studio Game', 'pasukan:mobile': 'Pasukan Mobile App', 'pasukan:jualan': 'Jualan & Sokongan', 'pasukan:kewangan': 'Kewangan & Pematuhan' }[p] || '';
       return { tajuk: i.title.replace(/^💡\s*Idea:\s*/i, ''), label: lb, pasukan: pk, url: i.html_url, tutup: i.state === 'closed' };
     });
-    lukisPapan();
+    lukisPapan(); lukisSkor(); tetapMesyuarat();
   } catch (e) { lukisPapan('Papan tidak dapat dimuatkan: ' + e.message); }
 }
 const STATUS_IDEA = ['ditolak-ceo', 'siap', 'sedang-dibina', 'lulus-ceo', 'perlu-ceo', 'disokong'];
@@ -517,18 +544,81 @@ function lukisPapan(ralat) {
     ui.append(li);
   }
 }
-// Gelembung cakap bergilir: mainkan semula perbualan terkini dalam pejabat
+// ---------- Perbualan dalam pejabat ----------
+// 1) Mesej sebenar Papan Syarikat dimainkan semula (gelembung biru).
+// 2) Ahli thread terbaru duduk di Bilik Mesyuarat bila mereka tidak bekerja.
+// 3) Sembang santai antara rakan sepasukan (gelembung kelabu, hiasan sahaja).
 let giliran = 0, bualAktif = null;
+function tetapMesyuarat() {
+  for (const o of AGEN) o.mesy = null;
+  const baru = BUAL.filter(b => Date.now() - b.t < 3 * 864e5);
+  if (!baru.length) return;
+  const tajuk = baru[0].tajuk; const siapa = [];
+  for (const b of BUAL) if (b.tajuk === tajuk && !siapa.includes(b.siapa) && b.siapa !== 'CEO') siapa.push(b.siapa);
+  const J = BILIK.J;
+  siapa.slice(0, 8).forEach((id, i) => {
+    const o = AGEN.find(x => x.a.id === id); if (!o) return;
+    const kiri = i % 2 === 0, z = J.z - 2.25 + Math.floor(i / 2) * 1.5;
+    o.mesy = V(J.x + (kiri ? -1.55 : 1.55), z); o.mesyRot = kiri ? Math.PI / 2 : -Math.PI / 2;
+    if (o.k === 'rehat') { o.jalan = laluan(o, o.mesy.clone()); }
+  });
+  const t = document.getElementById('mesyTajuk'); if (t) t.textContent = '🗣️ Sedang dibincang di Bilik Mesyuarat: ' + tajuk;
+}
 function mainBual() {
   if (bualAktif) { bualAktif.bual.visible = false; bualAktif = null; }
   const senarai = BUAL.slice(0, 12).reverse(); if (!senarai.length || !AGEN.length) return;
   const b = senarai[giliran++ % senarai.length];
   const o = AGEN.find(x => x.a.id === b.siapa); if (!o) return;
-  o.bual.userData.set(b.mesej.length > 120 ? b.mesej.slice(0, 118) + '…' : b.mesej);
+  o.bual.userData.set(b.mesej.length > 120 ? b.mesej.slice(0, 118) + '…' : b.mesej, true);
   o.bual.visible = true; bualAktif = o;
-  // pendengar dari pasukan lain menoleh: ahli seterusnya yang membalas dalam topik yang sama
-  const balas = senarai.find((x, i) => i > senarai.indexOf(b) && x.tajuk === b.tajuk && x.siapa !== b.siapa);
+  const i = senarai.indexOf(b);
+  const balas = senarai.find((x, j) => j > i && x.tajuk === b.tajuk && x.siapa !== b.siapa);
   if (balas) { const p = AGEN.find(x => x.a.id === balas.siapa); if (p) p.dengar = performance.now() + 6500; }
+}
+const SEMBANG = {
+  umum: ['Jom kopi dulu ☕', 'Mesyuarat Ahad nanti siapa present?', 'Dah baca PELAJARAN.md minggu ni?', 'Sasaran suku ni macam mana?', 'Senior semak PR kau dah?', 'Nak bantu? Bagitau je.', 'Esok sambung, mata dah kuyu 😅', 'Ada idea baru tak?'],
+  A: ['Produk fokus minggu ni kita pilih elok-elok.', 'CEO nak ringkasan padat, 5 minit je.'],
+  B: ['Trend minggu ni menarik juga…', 'Pesaing baru naik harga, peluang kita!', 'Data dah cukup untuk idea ni?'],
+  C: ['Warna ni nampak jelas kat telefon?', 'Hook baris pertama kena kuat!', 'Grafik siap, tinggal kapsyen.'],
+  D: ['Test dah lulus semua ✅', 'PR ni kecil je, senang semak.', 'Jangan lupa .env jangan commit!'],
+  E: ['Level 3 tu susah sangat ke?', 'Cabaran harian boleh tarik pemain balik.', 'Aset ni kita lukis sendiri, selamat.'],
+  F: ['Build Android ok kat skrin kecil.', 'Widget baru dah stabil.', 'Data Safety form dah lengkap?'],
+  G: ['Pelanggan tanya cara reset kata laluan.', 'Draf e-mel dah sedia, tunggu CEO.'],
+  H: ['Kos hosting bulan ni stabil.', 'Dasar privasi semua app dah ada?'],
+  I: ['Standard kita: kecil, diuji, boleh semak.', 'Idea ni bantu sasaran suku ke?', 'Jangan gred kerja sendiri — biar orang lain semak.']
+};
+function sembang() {
+  if (!gerak || !AGEN.length) return;
+  const calon = AGEN.filter(o => o.k === 'rehat' && !o.jalan.length && !o.bual.visible && o.a.id !== 'CEO');
+  if (!calon.length) return;
+  const o = calon[Math.floor(Math.random() * calon.length)];
+  const kawan = AGEN.find(x => x !== o && x.k === 'rehat' && !x.jalan.length && x.badan.position.distanceTo(o.badan.position) < 6);
+  const pool = [...(SEMBANG[o.a.bilik] || []), ...SEMBANG.umum];
+  o.bual.userData.set(pool[Math.floor(Math.random() * pool.length)], false); o.bual.visible = true;
+  if (kawan) kawan.dengar = performance.now() + 3500;
+  setTimeout(() => { if (bualAktif !== o) o.bual.visible = false; }, 3500);
+}
+// Kad skor pasukan (30 hari)
+function lukisSkor() {
+  const el2 = document.getElementById('skor'); if (!el2) return; el2.replaceChildren();
+  const had = Date.now() - 30 * 864e5;
+  const baris = Object.keys(PASUKAN).filter(k => k !== 'J').map(k => {
+    const kod = [...new Set(ROSTER.filter(a => a.bilik === k).map(a => a.kod))];
+    const siap = LOG.filter(r => kod.includes(r.kod) && r.keadaan === 'SIAP' && r.t > had).length;
+    const gagal = LOG.filter(r => kod.includes(r.kod) && r.keadaan === 'GAGAL' && r.t > had).length;
+    const ids = ROSTER.filter(a => a.bilik === k).map(a => a.id);
+    const mesej = BUAL.filter(b => ids.includes(b.siapa) && b.t > had).length;
+    const idea = IDEA.filter(i => i.pasukan === PASUKAN[k]).length;
+    return { k, siap, gagal, mesej, idea, skor: siap * 3 + mesej + idea * 2 - gagal * 3 };
+  }).sort((x, y) => y.skor - x.skor);
+  const t = document.createElement('table'); t.className = 'skor';
+  const h = document.createElement('tr'); for (const x of ['Pasukan', '✅', '❗', '💬', '💡']) h.append(el('th', null, x)); t.append(h);
+  baris.forEach((b, i) => {
+    const r = document.createElement('tr');
+    r.append(el('td', null, (i === 0 && b.skor > 0 ? '🏆 ' : '') + PASUKAN[b.k]), el('td', null, String(b.siap)), el('td', b.gagal ? 'bad' : null, String(b.gagal)), el('td', null, String(b.mesej)), el('td', null, String(b.idea)));
+    t.append(r);
+  });
+  el2.append(t, el('div', 'muted', '✅ tugas siap · ❗ gagal · 💬 mesej di Papan · 💡 idea dibuka'));
 }
 
 function jamHud() {
@@ -541,7 +631,7 @@ kemasKiniKeadaan();
 muatLog(); muatPapan();
 setInterval(muatLog, REFRESH_MS);
 setInterval(muatPapan, REFRESH_MS);
-setTimeout(mainBual, 2500); setInterval(mainBual, 7000);
+setTimeout(mainBual, 2500); setInterval(mainBual, 7000); setInterval(sembang, 4200);
 setInterval(() => { jamHud(); cahaya(); }, 1000);
 setInterval(() => { kemasKiniKeadaan(); lukisPanel(); }, 60000);
 requestAnimationFrame(tick);

@@ -55,3 +55,11 @@ Syarikat kini ada **8 pasukan, 24 ahli** (lihat [PERATURAN-SYARIKAT.md](PERATURA
 - Setiap mesej bermula dengan `**<emoji> <Nama> · <Peranan> (<Pasukan>):**` — pejabat 3D membaca baris ini dan tunjuk gelembung cakap di atas watak yang betul.
 - Idea baharu dibuka sebagai isu `💡 Idea: …` (label `idea`). Idea kecil (S) yang disokong ≥2 pasukan boleh terus dibuat prototaip melalui Pull Request.
 - Idea besar, perbelanjaan atau terbitan awam diberi label `perlu-ceo`. **CEO** lulus dengan label `lulus-ceo` atau tolak dengan `ditolak-ceo`.
+
+## 🎖️ Majlis Senior, sasaran & pelajaran
+
+- **Majlis Senior** (bilik I): 🧠 Dr. Faizal (CTO) semak semua PR, 🎯 Puan Rosnah (COO) pantau tugas gagal & sasaran, 📈 Wei Jie (CPO) tapis & pilih idea — setiap Sabtu 9:30 malam.
+- **[MATLAMAT.md](MATLAMAT.md)** — 3 sasaran suku ini. Hanya CEO ubah fail ini.
+- **Buku Pelajaran** — [isu #2](https://github.com/ARNA-Tech20/pejabat-syarikat/issues/2). Pasukan catat kesilapan dan cara kerja berkesan di sini.
+- **Bilik Mesyuarat** (bilik J) — ahli thread Papan Syarikat terbaru duduk di sini dan berbincang. Gelembung **biru** = mesej sebenar; gelembung **kelabu** = sembang santai (hiasan).
+- **Kad skor pasukan** di panel kanan: tugas siap, gagal, mesej dan idea 30 hari lepas.
